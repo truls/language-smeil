@@ -1,0 +1,479 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{syntax}
+\usepackage{xstring}
+\usepackage{minted}
+\usepackage{lmodern}
+\usepackage{multicol}
+\usepackage{xpatch}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+%% Hack to get rid of boxes around invalid chars in minted formatted text
+%% https://tex.stackexchange.com/questions/45756/inline-code-and-short-verb-with-minted/148479
+\makeatletter
+\AtBeginEnvironment{minted}{\dontdofcolorbox}
+\def\dontdofcolorbox{\renewcommand\fcolorbox[4][]{##4}}
+\makeatother
+\xpatchcmd{\mintinline}{\minted@fvset}{\minted@fvset\dontdofcolorbox}{}{}
+
+\newminted{json}{fontsize=\small}
+\newminted{c}{fontsize=\small}
+\newmintinline{haskell}{}
+\newmintinline{json}{}
+
+\title{SME intermediate language specification}
+\author{Truls Asheim {\tt <truls@asheim.dk>}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This document describes the intermediate representation (or language) for
+representing SME networks. The concrete syntax for the language is described in
+BNF format alongside the JSON serialization of the corresponding AST. The JSON
+schema used is automatically derived from the Haskell definition of the SMEIL
+(given in full in \Cref{hsast}) by the \texttt{Text.Aeson} library. The names
+used in the datatypes are transformed from upper and lower camel case to
+a hyphen-separated lower case sequence.
+
+\subsection{Design Principles}
+\begin{description}
+\item[Language independence.] Since SME networks can be written in several
+  different languages, the IR should not contain any required elements which are
+  specific to one particular language.
+\item[Structural richness.] A primary goal of the SME model is that the
+  generated VHDL code should be readable and have a relation with the original
+  source code. Therefore, contrary to the goal of most intermediate languages,
+  SMEIL should have rich constructs for specifying the structure of SME
+  networks.
+\item[Readability.] Ensuring that the IR has a readable and accessible
+  representation aids debugging and makes it possible to understand SME programs
+  stored SMEIL. For this reason, SMEIL also have a human-readable concrete
+  syntax.
+\item[Composibility.] The IR should provide unrestricted composability to ensure
+  that networks can be subdivided for optimal flexibility.
+\end{description}
+
+\subsection{Notation}
+\paragraph{JSON} The JSON serialization format is specified as using fragments of standard
+JSON-notation with a couple of additions.
+\begin{itemize}
+\item Names enclosed in angle-brackets should be replaced by the JSON fragment
+  that their name refers to. References to terminals should be replaced by their
+  definition given in BNF notation.
+\item The pipe symbol, \verb!|!, is used to indicate choice in cases where an
+  object can contain only one of several possible keys. For example, the fragment
+\begin{jsoncode}  
+[ { "element": { "network": <network>
+               | "bus": <bus> } }
+]
+\end{jsoncode}
+  describes a list of objects containing \textit{either} a single key named
+  \texttt{network} followed by a network definition or a single key named
+  \texttt{bus} followed by a bus definition. This is the representation of
+  sum-types the AST definitions.
+\item Values enclosed in \verb!?! characters are optional. \texttt{null}
+  indicates that the value is absent. For example, the fragment
+  \begin{jsoncode}
+{ "count": ?<expr>?
+, "size": <expr>
+}
+\end{jsoncode}
+  describes an object where the \texttt{"count"} field can be either an expression or
+  \texttt{null} while the \texttt{"size"} field is always an expression. This is
+  the representation of a \haskellinline{Maybe a} value in the SME definition.
+\item Square brackets, e.g. \verb![ el ]!, denotes a list containing zero or
+  more objects of type \texttt{el}. While empty lists will always be
+  successfully deserialized, the resulting SMEIL AST may not represent valid
+  SMEIL. The BNF description of the corresponding SMEIL construct specifies when
+  an empty list is allowed and when an object must occur at least once. The
+  exception to this is lists containing exactly two elements. These corresponds
+  to tuples.
+\item Parentheses are used for grouping multiple choices which are not JSON
+  object keys (wrapped in curly-braces). For example, the type of binary
+  operator in an expression is described as a choice between strings:
+\begin{jsoncode}
+{ "bin-op": ( "plus-op"
+            | "minus-op"
+            | ...
+            )
+\end{jsoncode}
+
+\end{itemize}
+\paragraph{BNF} The notation used mostly follows conventions of standard
+(non-extended) BNF.
+
+% \paragraph{Components}
+% \begin{description}
+%   %\item
+% \end{description}
+
+\section{Language Constructs}
+
+%\setlength{\grammarparsep}{1pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{10em} % increase separation between LHS/RHS 
+
+\subsection{Top level constructs}
+
+The fundamental building blocks of SME models are networks and processes. A
+process is a concurrently run block of sequential code while networks describes
+the invocations of 
+
+\paragraph{Grammar}
+
+\begin{grammar}
+  <design-file> ::= <design-unit> \{ <design-unit> \}
+
+  <design-unit> ::= \{ <import-stm> \} <unit-component> \\ \{ <unit-component> \}
+
+  <unit-component> ::= <network>
+  \alt <process>
+\end{grammar}
+
+\paragraph{JSON}
+
+\begin{jsoncode}
+{ "design-file": [ 
+  {"design-unit":
+    [ { "imports": [<import>]
+      , "networks": [<network>]
+      , "processes": [<process>]
+      }
+    ]
+  }
+  ]
+}
+\end{jsoncode}
+
+\subsection{Network structure}
+
+\subsubsection{Elements}
+\paragraph{BNF}
+\begin{grammar}
+  <import> ::= `import' <name> `;'
+
+  <network> ::= `network' <ident> `{' <network-decl> `}'
+
+  <network-decl> ::= <instance>
+  \alt <declaration>
+
+  <process> ::= [ `sync' | `async' ] [ `simulation' ] `proc' <ident> \\ `(' [
+  <params> ] `)' \{ declaration \} `{' \{ <statement> \} `}'
+\end{grammar}
+
+\paragraph{JSON}
+\begin{jsoncode}
+ {"import": <ident>}
+
+ {"network": { "name": <ident>
+             , "instance": [ <instance> ]
+             , "net-decls": [ <bus> ]
+             }
+ }
+
+ {"process": { "name": <ident>
+             , "mapping": [ <param> ]
+             , "decls": [ <declaration> ]
+             , "body": [ <statement> ]
+             , "clocked": bool
+             , "simulation": bool
+             }
+}
+\end{jsoncode}
+
+\subsubsection{Definitions}
+\paragraph{BNF}
+\begin{grammar}
+
+  % Re-introduce named instances if needed
+  %<instance> ::= `instance' <ident> `of' <ident> `(' [ <param-map> { `,' <param-map> } ]`)' `;'
+
+  <instance> ::= `instance' <ident> \\ `(' [ <param-map> { `,' <param-map> } ] `)' `;'
+
+  <param-map> ::= [ <ident> `:' ] <expression>
+
+  <params> ::= <param> \{ , <param> \}
+
+  <param> ::= <direction> <ident>
+  
+  <enum> ::= `enum' <ident> `{' <enum-field> \{ `,' <enum-field>  \} `}' `;'
+
+  <enum-field> ::= <ident> [ `=' <expr> ]
+
+  <bus-decl> ::= `bus' <ident> `\{' <bus-signal-decls> `\}'  `;'
+
+  <bus-signal-decls> ::= <bus-signal-decl> \{ [ `,' <bus-signal-decl> ] \}
+
+  <bus-signal-decl> ::= <ident> `:' <type> [ `=' <expression> ] [ <range> ] `;'
+
+  <var-decl> ::= `var' <ident> `:' \\ <type-name> [ `=' <expression> ] [ <range> ] `;'
+
+  <range> ::= `range' <expression> `to' <expression>
+
+  <const-decl> ::= `const' <ident> `:' <type-name> [ `=' <expression> ] `;'
+
+  <function> ::= `func' <ident> `{' { <statement> } `}'
+
+  <declaration> ::= <var-decl>
+  \alt <const-decl>
+  \alt <bus-decl>
+  \alt <enum>
+  \alt <function>
+
+\end{grammar}
+
+\paragraph{JSON}
+\begin{jsoncode}
+{"instance": { "el-name": <ident>
+             , "params": [ [ ?"ident"?, <expr> ] ]
+             }
+}
+
+{"enumeration": { "name": <ident>
+                , "fields": [ [<ident>, ?<expr>?] ]
+                }
+}
+
+{"range": { "from": <expr>
+          , "to": <expr>
+          }
+}
+
+{"bus": { "name": <ident>
+        , "signals": [ <bus-signal> ]
+        }
+}
+
+
+{"bus-signal": { "name": <ident>
+               , "ty": <type>
+               , "value": ?<expr>?
+               , "range": ?<range>?
+               }
+}       
+
+{"variable": { "name": <ident>
+             , "ty": <type>
+             , "val": ?<expr>?
+             , "range", ?<range>?
+             }
+}
+
+{"constant": { "name": <ident>
+             , "ty": <type>
+             , "val": <expr>
+             }
+}
+
+{"function": { "name": <ident>
+             , "params": [ <ident> ]
+             , "body": [ <statement> ]
+             }
+}
+
+{"declaration": { "var-decl": <variable>
+                | "const-decl": <constant>
+                | "bus-decl": <bus>
+                }
+}
+\end{jsoncode}
+
+\subsection{Statements}
+
+\paragraph{BNF}
+
+\begin{grammar}
+
+  <statement> ::= <name> `=' <expression> `;'
+  \alt `if' `(' <condition> `)' `{' \{ <statement> \} `}' \\ \{ <elif-block>
+    `}' `[' <else-block> `]'
+  \alt `for' <ident> `=' <expression> `to' <expression> \\ `{' \{ <statement> \} `}'
+  \alt `switch' <expression> `where' \\ `{' <switch-case> \{ <switch-case> \} `}'
+  \alt `barrier' `;'
+  \alt `break' `;'
+  \alt `return' [ <expr> ] `;'
+
+  <switch-case> ::= `case' <expression> `:' \{ <statement> \}
+  \alt `default` `:' \{ <statement> \}
+
+  <elif-block> ::= `elif `(' <condition> `)' `{' \{ <statement> \} `}'
+
+  <else-block> ::= `else' `{' \{ <statement> \} `}'
+
+\end{grammar}
+
+\paragraph{JSON}
+\begin{jsoncode}
+{ "assign" : { "var": <ident>
+             , "val" <expr>
+             }
+| "if": { "cond": <expr>
+        , "body": [ <statement> ]
+        , "elif": [ [ <expr>, [ <statement> ] ] ]
+        , "els":  [ <expr>, [ <statement> ] ]
+        }
+| "for": { "var": <ident>
+         , "from": <expr>
+         , "to": <expr>
+         , "body": [ <statement> ]
+         }
+| "switch": { "value": <expr>
+            , "cases": [ [ <expr>, [ <statement> ] ] ]
+            , "default-case": [ <statement> ]
+            }
+| "barrier": []
+| "break": []
+| "return": { "val": <expr> }
+}
+
+\end{jsoncode}
+\subsection{Expressions}
+\paragraph{BNF}
+\begin{grammar}
+  <expression> ::= <ident>
+  \alt <literal>
+  \alt <expression> <bin-op> <expression>
+  \alt <un-op> <expression>
+  \alt <function-call>
+  \alt `(' <expression> `)'
+
+  <function-call> ::= <ident> `(' \{ <ident> \}  `)'
+
+  <bin-op> ::= `+' (addition)
+  \alt `-' (subtraction)
+  \alt `*' (multiplication)
+  \alt `/' (division)
+  \alt `\%' (modulo)
+  \alt `==' (equal)
+  \alt `!=' (not equal)
+  \alt `\verb!<<!' (shift left)
+  \alt `\verb!>>!' (shift right)
+  \alt `<' (less than)
+  \alt `>' (greater than)
+  \alt `<=' (greater than or equal)
+  \alt `>=' (less than or equal)
+  \alt `\&' (bitwise-and)
+  \alt `|' (bitwise-or)
+  \alt `^' (bitwise-xor)
+
+  <un-op> ::= `-' (negation)
+  \alt `+' (identity)
+  \alt `!' (bitwise-not)
+
+\end{grammar}
+\paragraph{JSON}
+\begin{jsoncode}
+{ "binary": { "bin-op": <bin-op>
+            , "left": <expr>
+            , "right": <expr>
+            }
+| "unary": { "un-op": <un-op>
+             "expr": <expr>
+           }
+| "prim-lit": { "lit": <literal> }
+| "prim-name": { "name": <ident> }
+}
+
+{ "bin-op": ( "plus-op"
+            | "minus-op"
+            | "mul-op"
+            | "div-op"
+            | "mod-op"
+            | "eq-op"
+            | "neq-op"
+            | "sll-op"
+            | "srl-op"
+            | "lt-op"
+            | "gt-op"
+            | "leq-op"
+            | "geq-op"
+            | "and-op"
+            | "or-op"
+            | "xor-op"
+            )
+}
+
+{ "un-op": ( "un-plus"
+           | "un-minus"
+           | "not-op"
+           )
+}
+\end{jsoncode}
+\subsection{Lexical elements}
+\paragraph{BNF}
+\begin{grammar}
+
+  <direction> ::= `in' (input signal)
+  \alt `out' (output signal)
+  \alt `const' (constant input value)
+
+  <type> ::= `i' <integer> (signed integer)
+  \alt `u' <integer> (unsigned integer)
+  \alt `f32' (single-precision floating point)
+  \alt `f64' (double-precision floating point)
+  \alt `bool' (boolean value)
+  \alt `[' [ <integer> ] `]' <type> (array of type)
+
+
+  <literal> ::= <integer>
+  \alt <floating>
+  \alt <string-lit>
+  \alt `true'
+  \alt `false'
+
+  <ident> ::= <letter> ( <letter> | <num> | `_' | `-' )
+
+  <name> ::= <ident>
+  \alt <name> `.' <ident>
+
+  <string-lit> :: `"'\{ <char> \}`"'
+
+  <integer> ::= <number> { <number> }
+
+  <alpha-num> ::= <alpha>
+
+\end{grammar}
+
+\paragraph{JSON}
+\begin{jsoncode}
+{"direction": ( "in"
+              | "out"
+              | "const" )
+}
+
+{ "signed": { "size": <int> }
+| "unsigned": { "size": <int> }
+| "single": []
+| "double": []
+| "bool": []
+| "array": { "arr-length": ?<int>?
+           , "inner-ty": <type>
+           }
+}
+
+{ "lit-int": <int>
+| "lit-string": <string>
+| "lit-true": []
+}
+\end{jsoncode}
+
+\section{Example programs}
+
+\subsection{simplefifo.sme}
+\inputminted[fontsize=\small]{c}{samples/simplefifo.sme}
+
+\newpage
+\appendix
+\section{Haskell Implementation of the SMEIL AST}
+\label{hsast}
+\inputminted[fontsize=\small]{haskell}{../smeast/src/Language/SMEIL/Syntax.hs}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-command-extra-options: "-enable-write18"
+%%% End:

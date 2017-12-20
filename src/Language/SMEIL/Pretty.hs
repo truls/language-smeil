@@ -1,0 +1,184 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Language.SMEIL.Pretty
+  ( pprr
+  ) where
+
+import           Language.SMEIL.Syntax
+
+import           Text.PrettyPrint.Mainland
+import           Text.PrettyPrint.Mainland.Class
+
+instance Pretty DesignFile where
+  ppr (DesignFile du) = stack $ map ppr du
+
+instance Pretty DesignUnit where
+  ppr (DesignUnit i n ps) = stack (map ppr i) </> stack (map ppr n) </> stack (map ppr ps)
+
+instance Pretty Import where
+  ppr (Import s) = text "import" <+> text s <> semi
+
+instance Pretty Network where
+  ppr (Network i is) = text "network" <+> ppr i <+> braces (indent' (stack (map ppr is)))
+
+instance Pretty NetworkDecl where
+  ppr (NetInst i) = ppr i
+  ppr (NetDecl d) = ppr d
+
+instance Pretty Bus where
+  ppr (Bus n ss) = text "bus" <+> ppr n <+> braces (commasep $ map ppr ss)
+
+instance Pretty BusSignal where
+  ppr (BusSignal n t v r) =
+    ppr n <> colon <+> ppr t <+> ppr (catL (text "=") v) <+> ppr r <> semi
+
+instance Pretty Range where
+  ppr (Range u l) = text "range" <+> ppr u <+>  text "to" <+> ppr l
+
+instance Pretty Process where
+  ppr (Process n ps ds bs c s) =
+    ppIf c (text "clocked") <+>
+    ppIf s (text "simulation") <+>
+    text "proc" <+> ppr n <+> parens (commasep (map param ps)) </>
+    stack (map ppr ds) </>
+    braces (stack (map ppr bs))
+    where
+      param (d, i) = ppr d <+> ppr i
+
+instance Pretty Declaration where
+  ppr (VarDecl v)   = ppr v
+  ppr (ConstDecl c) = ppr c
+  ppr (BusDecl b)   = ppr b
+  ppr (FuncDecl f)  = ppr f
+
+instance Pretty Variable where
+  ppr (Variable n t v r) =
+    text "var" <+>
+    ppr n <> colon <+> ppr t <+> ppr (catL (text "=") v) <+> ppr r <> semi
+
+instance Pretty Constant where
+  ppr (Constant n t v) =
+    text "const" <+> ppr n <> colon <+> ppr t <+> equals <+> ppr v <> semi
+
+instance Pretty Function where
+  ppr (Function n ps bs) =
+    hang'
+      (text "func" <+>
+       ppr n <> parens (commasep $ map ppr ps) <+> braces (stack $ map ppr bs))
+
+instance Pretty Statement where
+  ppr (Assign i v) = ppr i <+> text "=" <+> ppr v <> semi
+  ppr (If c bs ei e) =
+    text "if" <+>
+    parens (ppr c) <+>
+    braces (indent' (stack $ map ppr bs)) </> ppr (map elifBlock ei) </>
+    ppr (elblock <$> e)
+    where
+      elifBlock (ee, ss) =
+        text "elif" <+> parens (ppr ee) <+> braces (indent' (stack $ map ppr ss))
+      elblock [] = empty
+      elblock ss = text "else" <+> braces (indent' (stack $ map ppr ss))
+  ppr (For v f t bs) =
+    ppr "for" <+>
+    ppr v <+>
+    text "=" <+>
+    ppr f <+> text "to" <+> ppr t <+> braces (indent' (stack $ map ppr bs))
+  ppr (Switch v cs ds) =
+    ppr "switch" <+>
+    parens (ppr v) </> braces (stack (map scase cs) </> ppr (dcase <$> ds))
+    where
+      scase (e, ss) =
+        hang' (text "case" <+> ppr e <> colon </> stack (map ppr ss))
+      dcase ss = hang' (text "default" <> colon </> stack (map ppr ss))
+  ppr Barrier = text "barrier" <> semi
+  ppr Break = text "break" <> semi
+  ppr (Return v) = text "return" <+> ppr v <> semi
+
+instance Pretty Enumeration where
+  ppr (Enumeration n fs) = hang' (text "enum" <+> ppr n <+> braces (commasep (map field fs)))
+    where
+      field :: (Ident, Maybe Expr) -> Doc
+      field (i, e) = ppr i <+> ppr (catL (text "=") e)
+
+instance Pretty Direction where
+  ppr In    = text "in"
+  ppr Out   = text "out"
+  ppr Const = text "const"
+
+instance Pretty Expr where
+  ppr (Binary op e1 e2) = ppr e1 <+> ppr op <+> ppr e2
+  ppr (Unary op e1)     = ppr op <> ppr e1
+  ppr (PrimLit l)       = ppr l
+  ppr (PrimName n)      = ppr n
+
+instance Pretty Instance where
+  ppr (Instance i e ps) =
+    text "instance" <+>
+    ppr i <+> text "of" <+> ppr e <+> parens (commasep $ map param ps)
+    where
+      param (Nothing, ee) = ppr ee
+      param (Just n, ee)  = ppr n <> colon <+> ppr ee
+
+instance Pretty BinOp where
+  ppr PlusOp  = text "+"
+  ppr MinusOp = text "-"
+  ppr MulOp   = text "*"
+  ppr DivOp   = text "/"
+  ppr ModOp   = text "%"
+  ppr EqOp    = text "=="
+  ppr NeqOp   = text "!="
+  ppr SllOp   = text "<<"
+  ppr SrlOp   = text ">>"
+  ppr LtOp    = text "<"
+  ppr GtOp    = text ">"
+  ppr LeqOp   = text "<="
+  ppr GeqOp   = text ">="
+  ppr AndOp   = text "&"
+  ppr OrOp    = text "|"
+  ppr XorOp   = text "^"
+
+instance Pretty UnOp where
+  ppr UnPlus  = text "+"
+  ppr UnMinus = text "-"
+  ppr NotOp   = text "!"
+
+instance Pretty Type where
+  ppr (Signed s)   = text "i" <> ppr s
+  ppr (Unsigned s) =  text "u" <> ppr s
+  ppr Single       = text "f32"
+  ppr Double       = text "f64"
+  ppr Bool         = text "bool"
+  ppr (Array l t)  = brackets $ ppr l <> ppr t
+
+instance Pretty Literal where
+  ppr (LitInt i)    = integer i
+  ppr (LitString s) = dquotes $ ppr s
+  ppr LitTrue       = text "true"
+  ppr LitFalse      = text "false"
+
+nestL :: Int
+nestL = 4
+
+indent' :: Doc -> Doc
+indent' = nest nestL
+
+hang' :: Doc -> Doc
+hang' = hang nestL
+
+-- hangs :: Doc -> Doc -> Doc
+-- hangs d1 d2 = d1 </> indent' d2
+
+ppIf :: Bool -> Doc -> Doc
+ppIf True d  = d
+ppIf False _ = empty
+
+pprr
+  :: (Pretty a)
+  => a -> String
+pprr = pretty 80 . ppr
+
+catL :: (Pretty a, Functor f) => Doc -> f a -> f Doc
+catL d e = catL' d <$> e
+
+catL' :: (Pretty a) => Doc -> a -> Doc
+catL' d e = d <> ppr e

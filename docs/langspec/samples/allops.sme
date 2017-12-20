@@ -1,0 +1,58 @@
+// Allops smeil example
+
+clocked proc producer (out output, const num1, const num2) {
+        output.data1 <= num2;
+        output.data2 <= num2;
+}
+
+clocked proc add (in input, out output)
+{
+        output.add = input.data1 + input.data2;
+}
+
+clocked proc div (in input, out output)
+{
+        output.div = input.data1 + input.data2;
+}
+
+clocked proc mul (in input, out output)
+{
+        output.mul = input.data1 + input.data2;
+}
+
+clocked proc sub (in input, out output)
+{
+        output.sub = input.data1 - input.data1;
+}
+
+clocked proc sink (in input, out result)
+{
+        result.agg = input.add + input.div + input.mul + input.
+}
+
+network all_ops (out result) {
+
+        bus inbus {
+            data1: u32;
+            data2: u32;
+        };
+
+        bus outbus {
+            add: u32 = 0;
+            mod: u32 = 0;
+            mul: u32 = 0;
+            div: u32 = 0;
+        };
+
+        bus result {
+            agg: i32;
+        }
+
+        instance prod of producer (output: inbus, input: outbus, num1: 4, num2: 9);
+        instance _ of add (inbus, outbus);
+        instance _ of div (inbus, outbus);
+        instance _ of mul (inbus, outbus);
+        instance _ of sub (inbus, outbus);
+
+        instance _ of sub (inbus, result);
+}

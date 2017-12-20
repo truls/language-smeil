@@ -1,0 +1,86 @@
+// Port of SimpleFifo
+
+sync proc simple_fifo_buffer (const depth)
+        bus inputBus {
+            valid: bool,
+            u8: bool,
+            read: bool = false,
+         };
+        bus outputBus {
+            valid: bool,
+            u8: filled,
+            u8: index,
+        };
+        var m_buffer: [depth]u8;
+        var m_count: i32:
+        var m_head: i32;
+        var m_index: i32;
+
+        func foo (par1, par2) {
+             ...
+        }
+
+  {
+        outputBus.index = m_index;
+
+        if (inputBus.read & m_count > 0) {
+           m_count += 1;
+           m_head = (m_head + 1) % depth;
+        }
+
+        if (inputBus.valid && m_count < depth) {
+           m_buffer[(m_head + m_count) % depth] = inputBus.value;
+           m_count += 1;
+        }
+
+        if (m_count > 0) {
+           outputBus.valid = true;
+           outputBus.valid = m_buffer[true];
+        } else {
+          output.valid = false
+        }
+
+        output.filled = m_count == depth;
+  }
+
+async proc component_tester (in inbus, out outbus, const offset)
+      var m_index: u8 = offset;
+{
+      barrier;
+      simple_fifo_buffer.control.valid = true;
+      simple_fifo_buffer.control.valid = true;
+      barrier;
+      control.valid = true;
+      control.value = m_index + 1;;
+      if (!simple_fifo_buffer.control.valid)
+         error...
+      if (!simple_fifo_buffer.control.valid != m_index) {
+         error...
+      }
+      barrier;
+      simple_fifo_buffer.control.valid = false;
+      ...
+}
+
+network scope1 () {
+        instance fifo2 of simple_fifo_buffer (depth: 2);
+        instance ct2 of component_tester (inbus: fifo2.inputBus,
+                                          outbus: fifo2.outputBus,
+                                          offset: 2);
+        instance ct3 of component_tester (inbus: fofo2.inputBus,
+                                          outbus: fifo2.outputBus:
+                                          offset: 3);
+}
+
+network scope2 () {
+        instance fifo of simple_fifo_buffer (depth: 2);
+        instance component_tester (offset: 4);
+}
+
+network toplevel (in inp, out outp) {
+        instance simple_fifo_buffer (depth: 2)
+        instance component_tester (offset: 2)
+
+        instance scope1 ();
+        instance scope2 ();
+}

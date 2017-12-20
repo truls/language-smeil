@@ -1,0 +1,62 @@
+name:                language-smeil
+version:             0.1.0.0
+synopsis:            SME Intermediate Language parser, pretty printer and utilities
+homepage:            https://github.com/truls/language-smeil#readme
+license:             LGPL-3
+license-file:        LICENSE
+author:              Truls Asheim
+maintainer:          truls@asheim.dk
+copyright:           Truls Asheim 2017
+category:            Language
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+-- To avoid duplicated efforts in documentation and dealing with the
+-- complications of embedding Haddock markup inside cabal files, it is
+-- common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/truls/language-smeil#readme>
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Language.SMEIL.Pretty
+                     , Language.SMEIL.Syntax
+                     , Language.SMEIL.JSON
+                     , Language.SMEIL.Parser
+                     , Language.SMEIL.Util
+  other-modules:       Language.SMEIL.Parser.Impl
+                     , Language.SMEIL.Parser.Monad
+                     , Language.SMEIL.Parser.Lexer
+  build-depends:       base >= 4.7 && < 5
+                     , mainland-pretty >= 0.6.1
+                     , aeson >= 1.2.3.0
+                     , bytestring >= 0.10.8.1
+                     , split >= 0.2.3.2
+                     , megaparsec >= 6.3.0
+  ghc-options:         -Wall
+  default-language:    Haskell2010
+
+executable smeast
+  hs-source-dirs:      app
+  main-is:             smeast.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:       base
+                     , language-smeil
+                     , optparse-applicative >= 0.13.2.0
+                     , directory >= 1.3.0.0
+                     , bytestring >= 0.10.8.1
+                     , pretty-show >= 1.6.13
+  default-language:    Haskell2010
+
+test-suite smeast-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , smeast
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/truls/smeast

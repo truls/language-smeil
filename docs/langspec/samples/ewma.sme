@@ -1,0 +1,19 @@
+// foo
+
+
+network ewma (in stream, out result) {
+        const alpha: f32 = 0.1;
+
+        bus bus1 {
+            val: i32;
+            valid: bool;
+        };
+        bus bus2 {
+            val: i32;
+            valid: bool;
+        }
+
+        instance l of logger (input: bus2);
+        instance s of source (output: bus2);
+        instance c of calc (input: bus1, output: bus2, alpha: alpha);
+}
