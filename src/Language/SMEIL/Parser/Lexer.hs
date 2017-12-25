@@ -99,7 +99,6 @@ reservedWords =
   , "where"
   , "bus"
   , "range"
-  , "clocked"
   , "simulation"
   , "var"
   , "const"
