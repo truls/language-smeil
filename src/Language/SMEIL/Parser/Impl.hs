@@ -1,6 +1,7 @@
 module Language.SMEIL.Parser.Impl where
 
 import           Control.Monad               (void)
+import           Data.Maybe                  (isJust)
 
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
@@ -75,8 +76,9 @@ enum = reserved "enum" >> S.Enumeration <$> ident <*> braces (some enumField) <*
 
 busDecl :: Parser S.Bus
 busDecl =
-  reserved "bus" >>
-  S.Bus <$> ident <*> braces (signalDecl `sepBy1` comma) <* semi
+  S.Bus <$> parses (reserved "exposed") <*> (reserved "bus" *> ident) <*>
+  braces (signalDecl `sepBy1` comma) <*
+  semi
   where
     signalDecl =
       S.BusSignal <$> (ident <* colon) <*> typeName <*>
@@ -156,6 +158,10 @@ name = (ident >>= rest) <?> "name"
       choice
         [S.ArrayAccess <$> pure context <*> brackets expression, pure context]
 
+-------------------------------------------------------------------------------
+-- Expressions
+-------------------------------------------------------------------------------
+
 expression :: Parser S.Expr
 expression = makeExprParser term table <?> "expression"
 
@@ -206,3 +212,7 @@ typeName =
     , S.Array <$> brackets (optional integer) <*> typeName
     ]
 
+-- Utility Functions
+
+parses :: Parser a -> Parser Bool
+parses p = isJust <$> optional p
