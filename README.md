@@ -13,7 +13,7 @@ This will build the `language-smeil` library and an executable named `smeast`
 which can be run using
 
 ```
-stack exec smlast -- <params>
+stack exec smeast -- <params>
 ```
 
 or installed to a location (`~/.local/bin` is default on linux) using
