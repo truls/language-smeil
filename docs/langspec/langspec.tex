@@ -8,6 +8,7 @@
 \usepackage{multicol}
 \usepackage{xpatch}
 \usepackage{booktabs}
+\usepackage{multicol}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
@@ -111,6 +112,8 @@ JSON-notation with a couple of additions.
 % \begin{description}
 %   %\item
 % \end{description}
+
+
 
 \section{Language Constructs}
 
@@ -387,7 +390,7 @@ the invocations of
              "expr": <expr>
            }
 | "prim-lit": { "lit": <literal> }
-| "prim-name": { "name": <ident> }
+| "prim-name": { "name": <name> }
 }
 
 { "bin-op": ( "plus-op"
@@ -424,9 +427,9 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   \centering
 \begin{tabular}{cc}
   \toprule
-  \textbf{Operators} & \textbf{Prescedence}\\
+  \textbf{Precedence} & \textbf{Operators}\\
   \midrule
-  0  & \verb!+! \verb!-! \verb|!| (unary)\\
+  0 & \verb!+! \verb!-! \verb|!| (unary)\\
   1 & * / \% \\
   2 & + - \\
   3 & \verb!<<! \verb!>>! \\
@@ -505,7 +508,39 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
 }
 \end{jsoncode}
 
+\subsection{Keywords}
+\begin{multicols}{3}
+  \begin{itemize}
+  \item import
+  \item network
+  \item where
+  \item bus
+  \item range
+  \item simulation
+  \item var
+  \item const
+  \item func
+  \item if
+  \item elif
+  \item else
+  \item for
+  \item to
+  \item switch
+  \item instance
+  \item of
+  \item sync
+  \item async
+  \item proc
+  \item in
+  \item out
+  \item exposed
+  \end{itemize}
+\end{multicols}
+
 \section{Example programs}
+
+\subsection{allops.sme}
+\inputminted[fontsize=\small]{c}{samples/allops3.sme}
 
 \subsection{simplefifo.sme}
 \inputminted[fontsize=\small]{c}{samples/simplefifo.sme}
