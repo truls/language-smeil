@@ -214,7 +214,7 @@ the invocations of
 
   <enum-field> ::= <ident> [ `=' <expr> ]
 
-  <bus-decl> ::= `bus' <ident> `\{' <bus-signal-decls> `\}'  `;'
+  <bus-decl> ::= [ `exposed' ] `bus' <ident> `\{' <bus-signal-decls> `\}'  `;'
 
   <bus-signal-decls> ::= <bus-signal-decl> \{ [ `,' <bus-signal-decl> ] \}
 
@@ -255,6 +255,7 @@ the invocations of
 }
 
 {"bus": { "name": <ident>
+        , "exposed" <bool>
         , "signals": [ <bus-signal> ]
         }
 }

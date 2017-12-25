@@ -108,4 +108,5 @@ reservedWords =
   , "proc"
   , "in"
   , "out"
+  , "exposed"
   ]

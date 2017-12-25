@@ -30,7 +30,9 @@ instance Pretty NetworkDecl where
   ppr (NetDecl d) = ppr d
 
 instance Pretty Bus where
-  ppr (Bus n ss) = text "bus" <+> ppr n <+> braces (commasep $ map ppr ss)
+  ppr (Bus e n ss) =
+    ppIf e (text "exposed") <+>
+    text "bus" <+> ppr n <+> braces (commasep $ map ppr ss) <> semi
 
 instance Pretty BusSignal where
   ppr (BusSignal n t v r) =
