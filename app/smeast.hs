@@ -44,7 +44,7 @@ instance Show Format where
   show PrettyJSON = "pretty-json"
   show JSON       = "json"
   show Pretty     = "pretty"
-  show AST        = "AST"
+  show AST        = "ast"
 
 data Options = Options
   { inputFile    :: FilePath
@@ -58,10 +58,10 @@ optParser =
   Options <$>
   strOption
     (long "input" <> metavar "IN" <> short 'i' <> O.value "-" <>
-     help "Input file") <*>
+     help "Input file. Defaults to stdin.") <*>
   strOption
     (long "output" <> metavar "OUT" <> short 'o' <> O.value "-" <>
-     help "Output file") <*>
+     help "Output file. Defaults to stdout") <*>
   option
     auto
     (long "input-format" <> short 'f' <>
@@ -73,7 +73,7 @@ optParser =
   where
     formats =
       show PrettyJSON ++
-      " " ++ show JSON ++ " " ++ show Pretty ++ " or " ++ show AST
+      ", " ++ show JSON ++ ", " ++ show Pretty ++ " or " ++ show AST
 
 opts :: ParserInfo Options
 opts =
