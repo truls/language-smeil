@@ -23,7 +23,12 @@ instance Pretty Import where
   ppr (Import s) = text "import" <+> ppr s <> semi
 
 instance Pretty Network where
-  ppr (Network i ps is) = text "network" <+> ppr i <+> parens (commasep $ map ppr ps) <+> braces (indent' (stack (map ppr is)))
+  ppr (Network i ps is) =
+    text "network" <+>
+    ppr i <+>
+    parens (commasep $ map param ps) <+> braces (indent' (stack (map ppr is)))
+    where
+      param (d, e) = ppr d <+> ppr e
 
 instance Pretty NetworkDecl where
   ppr (NetInst i) = ppr i
@@ -36,16 +41,18 @@ instance Pretty Bus where
 
 instance Pretty BusSignal where
   ppr (BusSignal n t v r) =
-    ppr n <> colon <+> ppr t <+> ppr (catL (text "=") v) <+> ppr r <> semi
+    ppr n <> colon <+> ppr t <+> ppr (catL (text "= ") v) <+> ppr r
 
 instance Pretty Range where
   ppr (Range u l) = text "range" <+> ppr u <+>  text "to" <+> ppr l
 
 instance Pretty Process where
   ppr (Process n ps ds bs c) =
+    hang' $
     ppIf c (text "sync") <+>
-    text "proc" <+> ppr n <+> parens (commasep (map param ps)) </>
-    stack (map ppr ds) </>
+    text "proc" <+>
+    ppr n <+>
+    parens (commasep (map param ps)) </> stack (map ppr ds) </>
     braces (stack (map ppr bs))
     where
       param (d, i) = ppr d <+> ppr i
@@ -80,7 +87,8 @@ instance Pretty Statement where
     ppr (elblock <$> e)
     where
       elifBlock (ee, ss) =
-        text "elif" <+> parens (ppr ee) <+> braces (indent' (stack $ map ppr ss))
+        text "elif" <+>
+        parens (ppr ee) <+> braces (indent' (stack $ map ppr ss))
       elblock [] = empty
       elblock ss = text "else" <+> braces (indent' (stack $ map ppr ss))
   ppr (For v f t bs) =
@@ -100,7 +108,8 @@ instance Pretty Statement where
   ppr (Return v) = text "return" <+> ppr v <> semi
 
 instance Pretty Enumeration where
-  ppr (Enumeration n fs) = hang' (text "enum" <+> ppr n <+> braces (commasep (map field fs)))
+  ppr (Enumeration n fs) =
+    hang' (text "enum" <+> ppr n <+> braces (commasep (map field fs)))
     where
       field :: (Ident, Maybe Expr) -> Doc
       field (i, e) = ppr i <+> ppr (catL (text "=") e)
@@ -120,7 +129,8 @@ instance Pretty Expr where
 instance Pretty Instance where
   ppr (Instance i e ps) =
     text "instance" <+>
-    ppr (toInstName i) <+> text "of" <+> ppr e <+> parens (commasep $ map param ps)
+    ppr (toInstName i) <+>
+    text "of" <+> ppr e <+> parens (commasep $ map param ps) <> semi
     where
       param (Nothing, ee) = ppr ee
       param (Just n, ee)  = ppr n <> colon <+> ppr ee
@@ -157,7 +167,7 @@ instance Pretty Name where
 
 instance Pretty Type where
   ppr (Signed s)   = text "i" <> ppr s
-  ppr (Unsigned s) =  text "u" <> ppr s
+  ppr (Unsigned s) = text "u" <> ppr s
   ppr Single       = text "f32"
   ppr Double       = text "f64"
   ppr Bool         = text "bool"
@@ -178,9 +188,6 @@ indent' = nest nestL
 
 hang' :: Doc -> Doc
 hang' = hang nestL
-
--- hangs :: Doc -> Doc -> Doc
--- hangs d1 d2 = d1 </> indent' d2
 
 ppIf :: Bool -> Doc -> Doc
 ppIf True d  = d
