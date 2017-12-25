@@ -15,6 +15,7 @@ module Language.SMEIL.Parser.Lexer
   , stringLit
   , spaceConsumer
   , equal
+  , direction
   ) where
 
 import           Control.Applicative         (empty)
@@ -81,6 +82,14 @@ literal =
     , S.LitString <$> stringLit
     , try $ S.LitFloat <$> float
     , S.LitInt <$> integer
+    ]
+
+direction :: Parser S.Direction
+direction =
+  choice
+    [ reserved "in"    >> pure S.In
+    , reserved "out"   >> pure S.Out
+    , reserved "const" >> pure S.Const
     ]
 
 reservedWords :: [String]

@@ -206,10 +206,3 @@ typeName =
     , S.Array <$> brackets (optional integer) <*> typeName
     ]
 
-direction :: Parser S.Direction
-direction =
-  choice
-    [ reserved "in"    >> pure S.In
-    , reserved "out"   >> pure S.Out
-    , reserved "const" >> pure S.Const
-    ]
