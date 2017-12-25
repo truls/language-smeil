@@ -1,41 +1,41 @@
 // Allops smeil example
 
-clocked proc producer (const num1, const num2)
+sync proc producer (const num1, const num2)
         bus outbus {
-            data1: u32;
-            data2: u32;
+            data1: u32,
+            data2: u32
         };
 {
         outbus.data1 = num2;
         outbus.data2 = num2;
 }
 
-clocked proc add (in inp. out outp)
+sync proc add (in inp, out outp)
 {
         outp.add = inp.data1 + inp.data2;
 }
 
-clocked proc div (in inp, out outp)
+sync proc div (in inp, out outp)
 {
         outp.div = inp.data1 + inp.data2;
 }
 
-clocked proc mul (in inp, out outp)
+sync proc mul (in inp, out outp)
 {
         outp.mul = inp.data1 + inp.data2;
 }
 
-clocked proc sub (in input, out output)
+sync proc sub (in input, out output)
 {
         outp.sub = inp.data1 - inp.data2;
 }
 
-clocked proc sink (out result)
+sync proc sink (out result)
         bus inbus {
-            add: u32 = 0;
-            sub: u32 = 0;
-            mul: u32 = 0;
-            div: u32 = 0;
+            add: u32 = 0,
+            sub: u32 = 0,
+            mul: u32 = 0,
+            div: u32 = 0
         };
 {
         result.agg = inbus.add + inbus.div + inbus.mul + inbus.sub;
@@ -43,20 +43,12 @@ clocked proc sink (out result)
 
 network all_ops (out result) {
 
-        bus result {
-            agg: i32;
-        }
+        exposed bus result {
+            agg: i32
+        };
 
         instance prod of producer (num1: 4, num2: 9);
-        instance prod2 of producer (num1: 10: num2: 5);
-        instance _ of add (inp: prod.outbus, outp: s.inbus);
-        instance _ of div (inp: prod.outbus, outp: s.inbus);
-        instance _ of mul (inp: prod.outbus, outp: s.inbus);
-        instance _ of sub (inp: prod2.outbus, outp: s.inbus);
-        instance s of sink (result: all_ops.result);
-
-        instance prod of producer (num1: 4, num2: 9);
-        instance prod2 of producer (num1: 10: num2: 5);
+        instance prod2 of producer (num1: 10, num2: 5);
         instance _ of add (inp: prod.outbus, outp: s.inbus);
         instance _ of div (inp: prod.outbus, outp: s.inbus);
         instance _ of mul (inp: prod.outbus, outp: s.inbus);
