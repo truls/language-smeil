@@ -44,7 +44,8 @@ data NetworkDecl
   deriving (Eq, Show)
 
 data Bus = Bus
-  { name    :: Ident -- ^
+  { exposed :: Bool
+  , name    :: Ident -- ^
   , signals :: [BusSignal]
   } deriving (Eq, Show)
 
