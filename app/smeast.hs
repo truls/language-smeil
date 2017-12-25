@@ -27,7 +27,7 @@ data Format
 
 instance Read Format where
   readsPrec _ input =
-    let (tok, rest) = span isLetter input
+    let (tok, rest) = span (\l -> isLetter l || l == '-')  input
     in case mapFormat tok of
          Just f  -> [(f, rest)]
          Nothing -> []
@@ -56,7 +56,9 @@ data Options = Options
 optParser :: Parser Options
 optParser =
   Options <$>
-  strOption (long "input" <> metavar "IN" <> short 'i' <> help "Input file") <*>
+  strOption
+    (long "input" <> metavar "IN" <> short 'i' <> O.value "-" <>
+     help "Input file") <*>
   strOption
     (long "output" <> metavar "OUT" <> short 'o' <> O.value "-" <>
      help "Output file") <*>
