@@ -13,13 +13,17 @@ instance Pretty DesignFile where
   ppr (DesignFile du) = stack $ map ppr du
 
 instance Pretty DesignUnit where
-  ppr (DesignUnit i n ps) = stack (map ppr i) </> stack (map ppr n) </> stack (map ppr ps)
+  ppr (DesignUnit i es) = stack (map ppr i) </> stack (map ppr es)
+
+instance Pretty UnitElement where
+  ppr (UnitProc p) = ppr p
+  ppr (UnitNet n)  = ppr n
 
 instance Pretty Import where
-  ppr (Import s) = text "import" <+> text s <> semi
+  ppr (Import s) = text "import" <+> ppr s <> semi
 
 instance Pretty Network where
-  ppr (Network i is) = text "network" <+> ppr i <+> braces (indent' (stack (map ppr is)))
+  ppr (Network i ps is) = text "network" <+> ppr i <+> parens (commasep $ map ppr ps) <+> braces (indent' (stack (map ppr is)))
 
 instance Pretty NetworkDecl where
   ppr (NetInst i) = ppr i
@@ -36,9 +40,8 @@ instance Pretty Range where
   ppr (Range u l) = text "range" <+> ppr u <+>  text "to" <+> ppr l
 
 instance Pretty Process where
-  ppr (Process n ps ds bs c s) =
-    ppIf c (text "clocked") <+>
-    ppIf s (text "simulation") <+>
+  ppr (Process n ps ds bs c) =
+    ppIf c (text "sync") <+>
     text "proc" <+> ppr n <+> parens (commasep (map param ps)) </>
     stack (map ppr ds) </>
     braces (stack (map ppr bs))
@@ -110,14 +113,17 @@ instance Pretty Expr where
   ppr (Unary op e1)     = ppr op <> ppr e1
   ppr (PrimLit l)       = ppr l
   ppr (PrimName n)      = ppr n
+  ppr (FunCall n ps)    = ppr n <> parens (commasep (map ppr ps))
 
 instance Pretty Instance where
   ppr (Instance i e ps) =
     text "instance" <+>
-    ppr i <+> text "of" <+> ppr e <+> parens (commasep $ map param ps)
+    ppr (toInstName i) <+> text "of" <+> ppr e <+> parens (commasep $ map param ps)
     where
       param (Nothing, ee) = ppr ee
       param (Just n, ee)  = ppr n <> colon <+> ppr ee
+      toInstName (Just a) = a
+      toInstName Nothing  = "_"
 
 instance Pretty BinOp where
   ppr PlusOp  = text "+"
@@ -142,6 +148,11 @@ instance Pretty UnOp where
   ppr UnMinus = text "-"
   ppr NotOp   = text "!"
 
+instance Pretty Name where
+  ppr (Ident i)         = ppr i
+  ppr (HierAccess is)   = cat $ punctuate dot (map ppr is)
+  ppr (ArrayAccess n e) = ppr n <> brackets (ppr e)
+
 instance Pretty Type where
   ppr (Signed s)   = text "i" <> ppr s
   ppr (Unsigned s) =  text "u" <> ppr s
@@ -152,6 +163,7 @@ instance Pretty Type where
 
 instance Pretty Literal where
   ppr (LitInt i)    = integer i
+  ppr (LitFloat f)  = double f
   ppr (LitString s) = dquotes $ ppr s
   ppr LitTrue       = text "true"
   ppr LitFalse      = text "false"

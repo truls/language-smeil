@@ -6,19 +6,23 @@
 module Language.SMEIL.JSON
   ( readJSON
   , genJSON
+  , genJSONPretty
   ) where
 
 import           Language.SMEIL.Syntax
 
-import           Control.Monad         (mapM)
-import           Data.Aeson            (FromJSON, ToJSON, eitherDecode, encode)
-import           Data.Aeson.TH         (Options (..), SumEncoding (..),
-                                        defaultOptions, deriveJSON, sumEncoding)
-import           Data.ByteString.Lazy  (ByteString)
+import           Control.Monad            (mapM)
+import           Data.Aeson               (FromJSON, ToJSON, eitherDecode,
+                                           encode)
+import           Data.Aeson.Encode.Pretty (encodePretty)
+import           Data.Aeson.TH            (Options (..), SumEncoding (..),
+                                           defaultOptions, deriveJSON,
+                                           sumEncoding)
+import           Data.ByteString.Lazy     (ByteString)
 
-import           Data.Char             (isUpper, toLower)
-import           Data.List             (intercalate)
-import           Data.List.Split       (keepDelimsL, split, whenElt)
+import           Data.Char                (isUpper, toLower)
+import           Data.List                (intercalate)
+import           Data.List.Split          (keepDelimsL, split, whenElt)
 
 -- | Reads a bytestring of JSON and returns a SMEIL AST fragment
 readJSON
@@ -26,11 +30,17 @@ readJSON
   => ByteString -> Either String a
 readJSON = eitherDecode
 
--- | Transforms a SMEIL AST to a JSON bytestringq
+-- | Transforms a SMEIL AST to a JSON bytestring
 genJSON
   :: (ToJSON a)
   => a -> ByteString
 genJSON = encode
+
+-- | Transforms a SMEIL AST to a pretty JSON bytestrinq
+genJSONPretty
+  :: (ToJSON a)
+  => a -> ByteString
+genJSONPretty = encodePretty
 
 concat <$>
   mapM
@@ -49,6 +59,7 @@ concat <$>
            }))
     [ ''DesignFile
     , ''DesignUnit
+    , ''UnitElement
     , ''Import
     , ''Instance
     , ''Network
@@ -67,6 +78,7 @@ concat <$>
     , ''Expr
     , ''BinOp
     , ''UnOp
+    , ''Name
     , ''Type
     , ''Literal
     ]

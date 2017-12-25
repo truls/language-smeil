@@ -4,8 +4,9 @@ module Main where
 
 import           Control.Exception          (throwIO)
 import           Control.Monad              (unless)
-import           Data.ByteString.Lazy       as B (readFile)
-import           Data.ByteString.Lazy.Char8 as C8 (pack, putStrLn, writeFile)
+import           Data.ByteString.Lazy       as B (getContents, readFile)
+import           Data.ByteString.Lazy.Char8 as C8 (pack, putStrLn, unpack,
+                                                   writeFile)
 import           Data.Char                  (isLetter, toLower)
 import           Data.Semigroup             ((<>))
 import           Options.Applicative        hiding (value)
@@ -18,7 +19,11 @@ import           Language.SMEIL.Parser
 import           Language.SMEIL.Pretty      (pprr)
 import           Language.SMEIL.Syntax
 
-data Format = JSON | Pretty | AST
+data Format
+  = PrettyJSON
+  | JSON
+  | Pretty
+  | AST
 
 instance Read Format where
   readsPrec _ input =
@@ -28,13 +33,18 @@ instance Read Format where
          Nothing -> []
     where
       mapFormat =
-        (`lookup` [("json", JSON), ("pretty", Pretty), ("ast", AST)]) .
+        (`lookup` [ ("pretty-json", PrettyJSON)
+                  , ("json", JSON)
+                  , ("pretty", Pretty)
+                  , ("ast", AST)
+                  ]) .
         map toLower
 
 instance Show Format where
-  show JSON   = "json"
-  show Pretty = "pretty"
-  show AST    = "AST"
+  show PrettyJSON = "pretty-json"
+  show JSON       = "json"
+  show Pretty     = "pretty"
+  show AST        = "AST"
 
 data Options = Options
   { inputFile    :: FilePath
@@ -53,11 +63,15 @@ optParser =
   option
     auto
     (long "input-format" <> short 'f' <>
-     help "Format of input file. ARG must be one of choices json pretty") <*>
+     help ("Format of input file. ARG must be one of choices " ++ formats)) <*>
   option
     auto
     (long "output-format" <> short 'g' <>
-     help "Format of output file. ARG must be one of choices json pretty")
+     help ("Format of output file. ARG must be one of choices " ++ formats))
+  where
+    formats =
+      show PrettyJSON ++
+      " " ++ show JSON ++ " " ++ show Pretty ++ " or " ++ show AST
 
 opts :: ParserInfo Options
 opts =
@@ -66,28 +80,39 @@ opts =
     (fullDesc <> progDesc "Converts between different representations of SMEIL" <>
      header "smeast - SMEIL representation converter")
 
-raiseEither :: (Show a) => Either a b -> IO b
+raiseEither :: Either String b -> IO b
 raiseEither (Right r) = pure r
-raiseEither (Left l)  = throwIO $ userError (show l)
+raiseEither (Left l)  = throwIO $ userError l
+
+prettyStdin :: String -> String
+prettyStdin "-" = "(stdin)"
+prettyStdin s   = s
 
 main :: IO ()
 main = do
   o <- execParser opts
   let inf = inputFile o
   let ouf = outputFile o
-  doesFileExist inf >>=
-    flip unless (throwIO (userError $ "Input file not found " ++ inf))
-  fc <- B.readFile inf
+  fc <-
+    case inf of
+      "-" -> B.getContents
+      _ -> do
+        doesFileExist inf >>=
+          flip unless (throwIO (userError $ "Input file not found " ++ inf))
+        B.readFile inf
   ast <-
     case inputFormat o of
-      JSON   -> raiseEither (readJSON fc :: Either String DesignFile)
-      Pretty -> raiseEither $ parse fc
-      AST    -> throwIO (userError "Cannot parse prettyAST")
+      PrettyJSON -> raiseEither (readJSON fc :: Either String DesignFile)
+      JSON       -> raiseEither (readJSON fc :: Either String DesignFile)
+      Pretty     -> raiseEither $ parse (prettyStdin inf) (unpack fc)
+      AST        -> throwIO (userError
+                             "Pretty printed AST cannot be used as source format")
   let out =
         case outputFormat o of
-          JSON   -> genJSON ast
-          Pretty -> C8.pack $ pprr ast
-          AST    -> C8.pack $ ppShow ast
+          PrettyJSON -> genJSONPretty ast
+          JSON       -> genJSON ast
+          Pretty     -> C8.pack $ pprr ast
+          AST        -> C8.pack $ ppShow ast
   if ouf == "-"
     then C8.putStrLn out
     else C8.writeFile ouf out

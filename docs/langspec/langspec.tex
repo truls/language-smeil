@@ -7,6 +7,7 @@
 \usepackage{lmodern}
 \usepackage{multicol}
 \usepackage{xpatch}
+\usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
@@ -87,11 +88,11 @@ JSON-notation with a couple of additions.
   the representation of a \haskellinline{Maybe a} value in the SME definition.
 \item Square brackets, e.g. \verb![ el ]!, denotes a list containing zero or
   more objects of type \texttt{el}. While empty lists will always be
-  successfully deserialized, the resulting SMEIL AST may not represent valid
-  SMEIL. The BNF description of the corresponding SMEIL construct specifies when
-  an empty list is allowed and when an object must occur at least once. The
-  exception to this is lists containing exactly two elements. These corresponds
-  to tuples.
+  successfully deserialized where lists are allowed, the resulting SMEIL AST may
+  not represent valid SMEIL. The BNF description of the corresponding SMEIL
+  construct specifies when an empty list is allowed and when an object must
+  occur at least once. The exception to this is lists containing exactly two
+  elements. These corresponds to tuples.
 \item Parentheses are used for grouping multiple choices which are not JSON
   object keys (wrapped in curly-braces). For example, the type of binary
   operator in an expression is described as a choice between strings:
@@ -114,37 +115,40 @@ JSON-notation with a couple of additions.
 \section{Language Constructs}
 
 %\setlength{\grammarparsep}{1pt plus 1pt minus 1pt} % increase separation between rules
-\setlength{\grammarindent}{10em} % increase separation between LHS/RHS 
+\setlength{\grammarindent}{10em} % increase separation between LHS/RHS
 
 \subsection{Top level constructs}
 
 The fundamental building blocks of SME models are networks and processes. A
 process is a concurrently run block of sequential code while networks describes
-the invocations of 
+the invocations of
 
 \paragraph{Grammar}
 
 \begin{grammar}
   <design-file> ::= <design-unit> \{ <design-unit> \}
 
-  <design-unit> ::= \{ <import-stm> \} <unit-component> \\ \{ <unit-component> \}
+  <design-unit> ::= \{ <import-stm> \} <unit-element> \\ \{ <unit-element> \}
 
-  <unit-component> ::= <network>
+  <unit-element> ::= <network>
   \alt <process>
 \end{grammar}
 
 \paragraph{JSON}
 
 \begin{jsoncode}
-{ "design-file": [ 
+{ "design-file": [
   {"design-unit":
     [ { "imports": [<import>]
-      , "networks": [<network>]
-      , "processes": [<process>]
+      , "unit-element": [<network>]
       }
     ]
   }
   ]
+}
+
+{ "unit-proc": { "processes":  [ <process> ] }
+| "unit-net": { "networks": [ <network> ] }
 }
 \end{jsoncode}
 
@@ -155,12 +159,13 @@ the invocations of
 \begin{grammar}
   <import> ::= `import' <name> `;'
 
-  <network> ::= `network' <ident> `{' <network-decl> `}'
+  <network> ::= `network' <ident> `(' [ <params> ] `)' `{' <network-decl> `}'
 
   <network-decl> ::= <instance>
   \alt <declaration>
 
-  <process> ::= [ `sync' | `async' ] [ `simulation' ] `proc' <ident> \\ `(' [
+  %<process> ::= [ `sync' | `async' ] [ `simulation' ] `proc' <ident> \\ `(' [
+  <process> ::= [ `sync' | `async' ] `proc' <ident> \\ `(' [
   <params> ] `)' \{ declaration \} `{' \{ <statement> \} `}'
 \end{grammar}
 
@@ -169,17 +174,21 @@ the invocations of
  {"import": <ident>}
 
  {"network": { "name": <ident>
-             , "instance": [ <instance> ]
-             , "net-decls": [ <bus> ]
+             , "params": [ <param> ]
+             , "net-decls": [ <network-decl> ]
              }
  }
 
+// network-decl
+{ "net-inst": { "inst": <instance> }
+| "net-decl": { "decl": <declaration> }
+}
+
  {"process": { "name": <ident>
-             , "mapping": [ <param> ]
+             , "params": [ <param> ]
              , "decls": [ <declaration> ]
              , "body": [ <statement> ]
              , "clocked": bool
-             , "simulation": bool
              }
 }
 \end{jsoncode}
@@ -188,17 +197,19 @@ the invocations of
 \paragraph{BNF}
 \begin{grammar}
 
-  % Re-introduce named instances if needed
-  %<instance> ::= `instance' <ident> `of' <ident> `(' [ <param-map> { `,' <param-map> } ]`)' `;'
+  <instance> ::= `instance' <instance-name> `of' <ident> \\`(' [ <param-map> { `,' <param-map> } ]`)' `;'
 
-  <instance> ::= `instance' <ident> \\ `(' [ <param-map> { `,' <param-map> } ] `)' `;'
+  %<instance> ::= `instance' <instance-name> \\ `(' [ <param-map> { `,' <param-map> } ] `)' `;'
+
+  <instance-name> ::= <ident> (named instance)
+  \alt `_' (anonymous instance)
 
   <param-map> ::= [ <ident> `:' ] <expression>
 
   <params> ::= <param> \{ , <param> \}
 
   <param> ::= <direction> <ident>
-  
+
   <enum> ::= `enum' <ident> `{' <enum-field> \{ `,' <enum-field>  \} `}' `;'
 
   <enum-field> ::= <ident> [ `=' <expr> ]
@@ -227,7 +238,8 @@ the invocations of
 
 \paragraph{JSON}
 \begin{jsoncode}
-{"instance": { "el-name": <ident>
+{"instance": { "inst-name": ?<ident>?
+             , "el-name": <ident>
              , "params": [ [ ?"ident"?, <expr> ] ]
              }
 }
@@ -253,7 +265,7 @@ the invocations of
                , "value": ?<expr>?
                , "range": ?<range>?
                }
-}       
+}
 
 {"variable": { "name": <ident>
              , "ty": <type>
@@ -292,12 +304,12 @@ the invocations of
     `}' `[' <else-block> `]'
   \alt `for' <ident> `=' <expression> `to' <expression> \\ `{' \{ <statement> \} `}'
   \alt `switch' <expression> `where' \\ `{' <switch-case> \{ <switch-case> \} `}'
+    [ `default` `:' <statement> \{ <statement> \} ]
   \alt `barrier' `;'
   \alt `break' `;'
   \alt `return' [ <expr> ] `;'
 
   <switch-case> ::= `case' <expression> `:' \{ <statement> \}
-  \alt `default` `:' \{ <statement> \}
 
   <elif-block> ::= `elif `(' <condition> `)' `{' \{ <statement> \} `}'
 
@@ -307,7 +319,7 @@ the invocations of
 
 \paragraph{JSON}
 \begin{jsoncode}
-{ "assign" : { "var": <ident>
+{ "assign" : { "var": <name>
              , "val" <expr>
              }
 | "if": { "cond": <expr>
@@ -333,7 +345,7 @@ the invocations of
 \subsection{Expressions}
 \paragraph{BNF}
 \begin{grammar}
-  <expression> ::= <ident>
+  <expression> ::= <name>
   \alt <literal>
   \alt <expression> <bin-op> <expression>
   \alt <un-op> <expression>
@@ -402,6 +414,29 @@ the invocations of
            )
 }
 \end{jsoncode}
+
+\subsubsection{Operator precedence}
+
+The operator precedence of SMEIL is listed \Cref{tab:ops}
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{cc}
+  \toprule
+  \textbf{Operators} & \textbf{Prescedence}\\
+  \midrule
+  0  & \verb!+! \verb!-! \verb|!| (unary)\\
+  1 & * / \% \\
+  2 & + - \\
+  3 & \verb!<<! \verb!>>! \\
+  4 & < > <= >= \\
+  5 & \verb!&! \verb!^! \verb!|! \\
+  \bottomrule
+\end{tabular}
+\caption{Operator precedence of SMEIL}
+\label{tab:ops}
+\end{table}
+
 \subsection{Lexical elements}
 \paragraph{BNF}
 \begin{grammar}
@@ -426,8 +461,10 @@ the invocations of
 
   <ident> ::= <letter> ( <letter> | <num> | `_' | `-' )
 
+  % TODO: Make more specific
   <name> ::= <ident>
-  \alt <name> `.' <ident>
+  \alt <name> `.' <ident> (hierarchical accessor)
+  \alt <name> `[' <expression> `]' (array element access)
 
   <string-lit> :: `"'\{ <char> \}`"'
 
@@ -454,6 +491,13 @@ the invocations of
            }
 }
 
+{ "name": { "ident": <ident> }
+| "hier-access": { "idents": [ <ident> ] }
+| "array-access": { "name": <name>
+                  , "index": <expression>
+                  }
+}
+
 { "lit-int": <int>
 | "lit-string": <string>
 | "lit-true": []
@@ -469,7 +513,7 @@ the invocations of
 \appendix
 \section{Haskell Implementation of the SMEIL AST}
 \label{hsast}
-\inputminted[fontsize=\small]{haskell}{../smeast/src/Language/SMEIL/Syntax.hs}
+\inputminted[fontsize=\small]{haskell}{../../src/Language/SMEIL/Syntax.hs}
 \end{document}
 
 %%% Local Variables:

@@ -5,32 +5,36 @@
 
 module Language.SMEIL.Syntax where
 
-
 newtype DesignFile = DesignFile
   { units :: [DesignUnit]
   } deriving (Eq, Show)
 
 data DesignUnit = DesignUnit
-  { imports   :: [Import] -- ^ Imports of the design unit
-  , networks  :: [Network] -- ^ Networks of the design unit
-  , processes :: [Process] -- ^ Processes of the design unit
+  { imports     :: [Import] -- ^ Imports of the design unit
+  , unitElement :: [UnitElement] -- ^ A unit-level process or network
   } deriving (Eq, Show)
+
+data UnitElement
+  = UnitProc { process :: Process }
+  | UnitNet { network :: Network }
+  deriving (Eq, Show)
 
 -- | Specifies a module to be imported in current design module
 newtype Import = Import
-  { ident :: Ident -- ^ Name of the module to be imported
+  { ident :: Name -- ^ Name of the module to be imported
   } deriving (Eq, Show)
 
 -- | Instantiates either a "Process" or a "Network"
 data Instance = Instance
-  { ident  :: Ident -- ^ The name of the instance
-  , elName :: Ident -- ^ The name of the object to initialize
-  , params :: [(Maybe Ident, Expr)] -- ^ Optionally named parameters of the object
+  { instName :: Maybe Ident -- ^ The name of the instance
+  , elName   :: Ident -- ^ The name of the object to initialize
+  , params   :: [(Maybe Ident, Expr)] -- ^ Optionally named parameters of the object
   } deriving (Eq, Show)
 
 -- | Defines a Network
 data Network = Network
   { name     :: Ident -- ^ Name of network
+  , params   :: [(Direction, Ident)]
   , netDecls :: [NetworkDecl] -- ^ Declarations in network
   } deriving (Eq, Show)
 
@@ -57,12 +61,12 @@ data Range = Range
   } deriving (Eq, Show)
 
 data Process = Process
-  { name       :: Ident
-  , params     :: [(Direction, Ident)]
-  , decls      :: [Declaration]
-  , body       :: [Statement]
-  , clocked    :: Bool
-  , simulation :: Bool
+  { name   :: Ident
+  , params :: [(Direction, Ident)]
+  , decls  :: [Declaration]
+  , body   :: [Statement]
+  , sync   :: Bool
+  --, simulation :: Bool
   } deriving (Eq, Show)
 
 data Declaration
@@ -92,8 +96,8 @@ data Function = Function
   } deriving (Eq, Show)
 
 data Statement
-  = Assign { var :: Ident
-          ,  val :: Expr}
+  = Assign { dest :: Name
+          ,  val  :: Expr}
   | If { cond :: Expr
       ,  body :: [Statement]
       ,  elif :: [(Expr, [Statement])]
@@ -107,7 +111,7 @@ data Statement
           ,  defaultCase :: Maybe [Statement]}
   | Barrier
   | Break
-  | Return { val :: Expr }
+  | Return { retVal :: Maybe Expr }
   deriving (Eq, Show)
 
 data Enumeration = Enumeration
@@ -123,12 +127,15 @@ data Direction
 
 data Expr
   = Binary { binOp :: BinOp
-           , left  :: Expr
-           , right :: Expr}
+          ,  left  :: Expr
+          ,  right :: Expr}
   | Unary { unOp :: UnOp
-          , expr :: Expr}
+         ,  expr :: Expr}
   | PrimLit { lit :: Literal}
-  | PrimName { name :: Ident}
+  | PrimName { name :: Name}
+  | FunCall { name   :: Name
+            , params :: [Expr]
+            }
   deriving (Eq, Show)
 
 data BinOp
@@ -156,18 +163,26 @@ data UnOp
   | NotOp
   deriving (Eq, Show)
 
+data Name
+  = Ident { ident :: Ident}
+  | HierAccess { idents :: [Ident]}
+  | ArrayAccess { name  :: Name
+               ,  index :: Expr}
+  deriving (Eq, Show)
+
 data Type
-  = Signed { size :: Int}
-  | Unsigned { size :: Int}
+  = Signed { size :: Integer}
+  | Unsigned { size :: Integer}
   | Single
   | Double
   | Bool
-  | Array { arrLength :: Maybe Int
+  | Array { arrLength :: Maybe Integer
          ,  innerTy   :: Type}
   deriving (Eq, Show)
 
 data Literal
   = LitInt Integer
+  | LitFloat Double
   | LitString String
   | LitTrue
   | LitFalse
