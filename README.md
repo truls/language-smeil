@@ -51,3 +51,6 @@ formatted JSON use
 ```
 stack exec smeast -- -i docs/langspec/samples/allops3.sme -f pretty -g pretty-json
 ```
+
+## Language specification
+The SMEIL language specification can be found in `docs/langspec/langsepc.tex`
