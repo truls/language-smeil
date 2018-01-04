@@ -65,7 +65,6 @@ instanceDecl =
   semi
   where
     paramMap = (,) <$> optional (try (ident <* colon)) <*> expression
-
     transformIdent "_" = Nothing
     transformIdent i   = Just i
 
@@ -77,40 +76,42 @@ enum = reserved "enum" >> S.Enumeration <$> ident <*> braces (some enumField) <*
 busDecl :: Parser S.Bus
 busDecl =
   S.Bus <$> parses (reserved "exposed") <*> (reserved "bus" *> ident) <*>
-  braces (signalDecl `sepBy1` comma) <*
-  semi
+  braces (some signalDecl) <*
+  semi <?> "bus declaration"
   where
     signalDecl =
       S.BusSignal <$> (ident <* colon) <*> typeName <*>
       optional (symbol "=" *> expression) <*>
-      optional range
-
-declaration :: Parser S.Declaration
-declaration = choice [ S.VarDecl <$> varDecl
-                     , S.ConstDecl <$> constDecl
-                     , S.BusDecl <$> busDecl
-                     , S.FuncDecl <$> function
-                     ]
+      optional range <*
+      semi <?> "bus signal declaration"
 
 varDecl :: Parser S.Variable
 varDecl =
   reserved "var" >>
   S.Variable <$> ident <*> typeName <*> optional (symbol "=" *> expression) <*>
   optional range <*
-  semi
+  semi <?> "variable declaration"
 
 range :: Parser S.Range
 range =
-  reserved "range" >> S.Range <$> expression <* reserved "to" <*> expression
+  reserved "range" >>
+  S.Range <$> expression <* reserved "to" <*> expression <?> "range constraint"
 
 constDecl :: Parser S.Constant
 constDecl =
   reserved "const" >>
-  S.Constant <$> ident <*> typeName <*> (symbol "=" *> expression) <* semi
+  S.Constant <$> ident <*> typeName <*> (symbol "=" *> expression) <* semi <?> "constant declaration"
 
 function :: Parser S.Function
 function =
-  reserved "func" >> S.Function <$> ident <*> many ident <*> many statement
+  reserved "func" >> S.Function <$> ident <*> many ident <*> many statement <?> "function"
+
+declaration :: Parser S.Declaration
+declaration = choice [ S.VarDecl <$> varDecl
+                     , S.ConstDecl <$> constDecl
+                     , S.BusDecl <$> busDecl
+                     , S.FuncDecl <$> function
+                     ] <?> "declaration"
 
 ---------------------------------------------------------------------------------
 -- Statements
@@ -119,7 +120,7 @@ function =
 statement :: Parser S.Statement
 statement =
   ifStm <|> forStm <|> switchStm <|> barrierStm <|> breakStm <|> returnStm <|>
-  assignStm
+  assignStm <?> "statement"
   where
     assignStm = S.Assign <$> (name <* equal) <*> expression <* semi
     ifStm =
@@ -128,19 +129,21 @@ statement =
       many
         (reserved "elif" *>
          parens ((,) <$> expression <*> braces (many statement))) <*>
-      optional (reserved "else" *> braces (many statement))
+      optional (reserved "else" *> braces (many statement)) <?> "if statement"
     forStm =
       reserved "for" >>
       S.For <$> (ident <* equal) <*> (expression <* reserved "to") <*>
       expression <*>
-      braces (many statement)
+      braces (many statement) <?> "for statement"
     switchStm =
       reserved "switch" >>
       S.Switch <$> (expression <* reserved "where") <*> braces (many switchCase) <*>
-      optional defaultCase
-    switchCase =
-      reserved "case" >> (,) <$> (expression <* colon) <*> some statement
-    defaultCase = reserved "default" >> colon *> some statement
+      optional defaultCase <?> "switch statement"
+      where
+        switchCase =
+          reserved "case" >>
+          (,) <$> (expression <* colon) <*> some statement <?> "switch case"
+        defaultCase = reserved "default" >> colon *> some statement
     barrierStm = reserved "barrier" >> semi >> pure S.Barrier
     breakStm = reserved "break" >> semi >> pure S.Break
     returnStm = reserved "return" >> S.Return <$> optional expression <* semi

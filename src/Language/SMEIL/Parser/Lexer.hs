@@ -56,7 +56,7 @@ reserved w = do
 
 ident :: Parser String
 ident = lexeme $ do
-  i <- part <|> symbol "_"
+  i <- part <|> string "_" <* notFollowedBy part
   when (i `elem` reservedWords) $
     fail $ "Keyword " ++ i ++ " used as identifier"
   return i
@@ -64,15 +64,22 @@ ident = lexeme $ do
     part = (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
 
 integer :: Parser Integer
-integer = lexeme $ L.signed spaceConsumer L.decimal
+integer = lexeme $ L.signed spaceConsumer (hex <|> oct <|> dec)
+  where
+    hex = try (string "0x") >> L.hexadecimal
+    oct = try (string "0o") >> L.octal
+    dec = L.decimal
 
 float :: Parser Double
 float = lexeme $ L.signed spaceConsumer L.float
 
 stringLit :: Parser String
-stringLit = lexeme (char '\"' >> manyTill strChar (char '\"'))
+stringLit =
+  lexeme
+    (between (char '"') (char '"' <?> "end of string") (many strChar))
   where
-    strChar = notChar '\\' <|> (char '\\' >> char '"')
+    strChar = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
+      <|> (char '\\' >> char '"')
 
 literal :: Parser S.Literal
 literal =

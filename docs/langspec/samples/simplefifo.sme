@@ -2,23 +2,22 @@
 
 sync proc simple_fifo_buffer (const depth)
         bus inputBus {
-            valid: bool,
-            u8: bool,
-            read: bool = false,
+            valid: bool;
+            u8: bool;
+            read: bool = false;
          };
         bus outputBus {
-            valid: bool,
-            u8: filled,
-            u8: index,
+            valid: bool;
+            u8: filled;
+            u8: index;
         };
         var m_buffer: [depth]u8;
         var m_count: i32:
         var m_head: i32;
         var m_index: i32;
 
-        func foo (par1, par2) {
-             ...
-        }
+        // func foo (par1, par2) {
+        // }
 
   {
         outputBus.index = m_index;
@@ -52,14 +51,14 @@ async proc component_tester (in inbus, out outbus, const offset)
       barrier;
       control.valid = true;
       control.value = m_index + 1;;
-      if (!simple_fifo_buffer.control.valid)
-         error...
-      if (!simple_fifo_buffer.control.valid != m_index) {
-         error...
-      }
+      // if (!simple_fifo_buffer.control.valid)
+      //    error...
+      // if (!simple_fifo_buffer.control.valid != m_index) {
+      //    error...
+      // }
       barrier;
       simple_fifo_buffer.control.valid = false;
-      ...
+      //...
 }
 
 network scope1 () {
@@ -78,9 +77,9 @@ network scope2 () {
 }
 
 network toplevel (in inp, out outp) {
-        instance simple_fifo_buffer (depth: 2)
-        instance component_tester (offset: 2)
+        instance simple_fifo_buffer (depth: 2);
+        instance component_tester (offset: 2);
 
-        instance scope1 ();
-        instance scope2 ();
+        instance _ scope1 ();
+        instance _ scope2 ();
 }
