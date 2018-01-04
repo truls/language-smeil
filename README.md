@@ -1,5 +1,7 @@
 # language-smeil
 
+[![Build Status](https://travis-ci.org/truls/language-smeil.svg?branch=master)](https://travis-ci.org/truls/language-smeil)
+
 SME Intermediate Language parser, pretty printer and utilities
 
 ## Building
