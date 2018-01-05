@@ -165,7 +165,8 @@ the invocations of
   <network> ::= `network' <ident> `(' [ <params> ] `)' `{' <network-decl> `}'
 
   <network-decl> ::= <instance>
-  \alt <declaration>
+  \alt <bus-decl>
+  \alt <const-decl>
 
   %<process> ::= [ `sync' | `async' ] [ `simulation' ] `proc' <ident> \\ `(' [
   <process> ::= [ `sync' | `async' ] `proc' <ident> \\ `(' [
@@ -184,7 +185,8 @@ the invocations of
 
 // network-decl
 { "net-inst": { "inst": <instance> }
-| "net-decl": { "decl": <declaration> }
+| "net-bus": { "bus": <bus-decl> }
+| "net-const": { "const": <const-decl> }
 }
 
  {"process": { "name": <ident>

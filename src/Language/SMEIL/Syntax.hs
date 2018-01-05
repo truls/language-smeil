@@ -39,8 +39,9 @@ data Network = Network
   } deriving (Eq, Show)
 
 data NetworkDecl
-  = NetInst { inst :: Instance} -- ^ A network instance
-  | NetDecl { decl :: Declaration} -- ^ A network declaration
+  = NetInst { inst :: Instance } -- ^ A network instance
+  | NetBus { bus :: Bus } -- ^ A network declaration
+  | NetConst { const :: Constant } -- ^ A network constant
   deriving (Eq, Show)
 
 data Bus = Bus

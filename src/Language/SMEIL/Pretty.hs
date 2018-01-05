@@ -31,8 +31,9 @@ instance Pretty Network where
       param (d, e) = ppr d <+> ppr e
 
 instance Pretty NetworkDecl where
-  ppr (NetInst i) = ppr i
-  ppr (NetDecl d) = ppr d
+  ppr (NetInst i)  = ppr i
+  ppr (NetBus b)   = ppr b
+  ppr (NetConst c) = ppr c
 
 instance Pretty Bus where
   ppr (Bus e n ss) =

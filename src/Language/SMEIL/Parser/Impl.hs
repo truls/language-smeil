@@ -37,7 +37,8 @@ network =
 
 networkDecl :: Parser S.NetworkDecl
 networkDecl = choice [ S.NetInst <$> instanceDecl
-                     , S.NetDecl <$> declaration
+                     , S.NetBus <$> busDecl
+                     , S.NetConst <$> constDecl
                      ]
 
 process :: Parser S.Process
