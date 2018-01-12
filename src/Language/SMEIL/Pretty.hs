@@ -84,7 +84,7 @@ instance Pretty Statement where
   ppr (If c bs ei e) =
     text "if" <+>
     parens (ppr c) <+>
-    braces (indent' (stack $ map ppr bs)) </> ppr (map elifBlock ei) </>
+    braces (indent' (stack $ map ppr bs)) </> stack (map (ppr . elifBlock) ei) </>
     ppr (elblock <$> e)
     where
       elifBlock (ee, ss) =
