@@ -185,6 +185,7 @@ data Literal
   = LitInt Integer
   | LitFloat Double
   | LitString String
+  | LitArray [Expr]
   | LitTrue
   | LitFalse
   deriving (Eq, Show)

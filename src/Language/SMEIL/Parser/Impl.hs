@@ -173,10 +173,15 @@ expression = makeExprParser term table <?> "expression"
 term :: Parser S.Expr
 term =
   choice
-    [parens expression, S.PrimLit <$> literal, S.PrimName <$> name, funCall] <?>
+    [ parens expression
+    , S.PrimLit <$> (literal <|> arrayLit)
+    , S.PrimName <$> name
+    , funCall
+    ] <?>
   "term"
   where
     funCall = S.FunCall <$> name <*> parens (expression `sepBy1` comma)
+    arrayLit = S.LitArray <$> brackets (expression `sepBy` comma)
 
 table :: [[Operator Parser S.Expr]]
 table =

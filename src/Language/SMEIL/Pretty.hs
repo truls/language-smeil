@@ -178,6 +178,7 @@ instance Pretty Literal where
   ppr (LitInt i)    = integer i
   ppr (LitFloat f)  = double f
   ppr (LitString s) = dquotes $ ppr s
+  ppr (LitArray es) = brackets (commasep (map ppr es))
   ppr LitTrue       = text "true"
   ppr LitFalse      = text "false"
 
