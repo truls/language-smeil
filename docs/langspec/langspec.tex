@@ -204,8 +204,6 @@ the invocations of
 
   <instance> ::= `instance' <instance-name> `of' <ident> \\`(' [ <param-map> { `,' <param-map> } ]`)' `;'
 
-  %<instance> ::= `instance' <instance-name> \\ `(' [ <param-map> { `,' <param-map> } ] `)' `;'
-
   <instance-name> ::= <ident> (named instance)
   \alt `_' (anonymous instance)
 
@@ -355,10 +353,8 @@ the invocations of
   \alt <literal>
   \alt <expression> <bin-op> <expression>
   \alt <un-op> <expression>
-  \alt <function-call>
+  \alt <name> `(' \{ <expression> \}  `)' (function call)
   \alt `(' <expression> `)'
-
-  <function-call> ::= <ident> `(' \{ <ident> \}  `)'
 
   <bin-op> ::= `+' (addition)
   \alt `-' (subtraction)
