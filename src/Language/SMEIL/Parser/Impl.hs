@@ -199,6 +199,7 @@ table =
     , binary ">" (S.Binary S.GtOp)
     , binary "<=" (S.Binary S.GeqOp)
     , binary ">=" (S.Binary S.LeqOp)
+    , binary "==" (S.Binary S.EqOp)
     ]
   , [binary "&" (S.Binary S.AndOp)]
   , [binary "^" (S.Binary S.XorOp)]
