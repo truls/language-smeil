@@ -214,7 +214,7 @@ typeName =
     , char 'f' >>
       ((string "32" >> pure S.Single) <|> (string "64" >> pure S.Double))
     , string "bool" >> pure S.Bool
-    , S.Array <$> brackets (optional integer) <*> typeName
+    , S.Array <$> brackets (optional expression) <*> typeName
     ]
 
 -- Utility Functions

@@ -177,7 +177,7 @@ data Type
   | Single
   | Double
   | Bool
-  | Array { arrLength :: Maybe Integer
+  | Array { arrLength :: Maybe Expr
          ,  innerTy   :: Type}
   deriving (Eq, Show)
 
