@@ -101,7 +101,8 @@ range =
 constDecl :: Parser S.Constant
 constDecl =
   reserved "const" >>
-  S.Constant <$> ident <*> typeName <*> (symbol "=" *> expression) <* semi <?> "constant declaration"
+  S.Constant <$> (ident <* colon) <*> typeName <*> (symbol "=" *> expression) <*
+  semi <?> "constant declaration"
 
 function :: Parser S.Function
 function =
