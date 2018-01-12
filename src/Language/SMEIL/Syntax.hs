@@ -45,30 +45,29 @@ data NetworkDecl
   deriving (Eq, Show)
 
 data Bus = Bus
-  { exposed :: Bool
-  , name    :: Ident -- ^
-  , signals :: [BusSignal]
+  { exposed :: Bool -- ^Bus is exposed on top level
+  , name    :: Ident -- ^Name of bus
+  , signals :: [BusSignal] -- ^Bus signals
   } deriving (Eq, Show)
 
 data BusSignal = BusSignal
-  { name  :: Ident
-  , ty    :: Type
-  , value :: Maybe Expr
-  , range :: Maybe Range
+  { name  :: Ident -- ^Name of signal
+  , ty    :: Type -- ^Type of signal
+  , value :: Maybe Expr -- ^Initial value of signal
+  , range :: Maybe Range -- ^Signal range
   } deriving (Eq, Show)
 
 data Range = Range
-  { lower :: Expr
-  , upper :: Expr
+  { lower :: Expr -- ^Lower bound
+  , upper :: Expr -- ^Upper bound
   } deriving (Eq, Show)
 
 data Process = Process
-  { name   :: Ident
-  , params :: [(Direction, Ident)]
-  , decls  :: [Declaration]
+  { name   :: Ident -- ^Name of process
+  , params :: [(Direction, Ident)] -- ^Process parameters
+  , decls  :: [Declaration] -- ^
   , body   :: [Statement]
   , sync   :: Bool
-  --, simulation :: Bool
   } deriving (Eq, Show)
 
 data Declaration
