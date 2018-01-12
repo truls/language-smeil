@@ -172,7 +172,7 @@ instance Pretty Type where
   ppr Single       = text "f32"
   ppr Double       = text "f64"
   ppr Bool         = text "bool"
-  ppr (Array l t)  = brackets $ ppr l <> ppr t
+  ppr (Array l t)  = brackets (ppr l) <> ppr t
 
 instance Pretty Literal where
   ppr (LitInt i)    = integer i
