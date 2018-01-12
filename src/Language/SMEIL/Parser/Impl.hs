@@ -89,7 +89,7 @@ busDecl =
 varDecl :: Parser S.Variable
 varDecl =
   reserved "var" >>
-  S.Variable <$> ident <*> typeName <*> optional (symbol "=" *> expression) <*>
+  S.Variable <$> (ident <* colon) <*> typeName <*> optional (symbol "=" *> expression) <*>
   optional range <*
   semi <?> "variable declaration"
 
