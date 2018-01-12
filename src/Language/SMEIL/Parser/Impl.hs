@@ -130,7 +130,7 @@ statement =
       S.If <$> parens expression <*> braces (some statement) <*>
       many
         (reserved "elif" *>
-         parens ((,) <$> expression <*> braces (many statement))) <*>
+         ((,) <$> parens expression <*> braces (many statement))) <*>
       optional (reserved "else" *> braces (many statement)) <?> "if statement"
     forStm =
       reserved "for" >>
