@@ -393,6 +393,9 @@ the invocations of
            }
 | "prim-lit": { "lit": <literal> }
 | "prim-name": { "name": <name> }
+| "fun-call": { "name": <name>
+              , "params": [ <expr> ]
+              }
 }
 
 { "bin-op": ( "plus-op"
@@ -456,12 +459,13 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   \alt `f32' (single-precision floating point)
   \alt `f64' (double-precision floating point)
   \alt `bool' (boolean value)
-  \alt `[' [ <integer> ] `]' <type> (array of type)
+  \alt `[' [ <expression> ] `]' <type> (array of type)
 
 
   <literal> ::= <integer>
   \alt <floating>
-  \alt <string-lit>
+  \alt `"'\{ <char> \}`"' (string literal)
+  \alt `[' <expression> \{ `,' <expression> \} `]' (array literal)
   \alt `true'
   \alt `false'
 
@@ -471,8 +475,6 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   <name> ::= <ident>
   \alt <name> `.' <ident> (hierarchical accessor)
   \alt <name> `[' <expression> `]' (array element access)
-
-  <string-lit> :: `"'\{ <char> \}`"'
 
   <integer> ::= <number> { <number> } (decimal number)
   \alt `0x' <hex-digit> { <hex-digit> } (hexadecimal number)
@@ -494,7 +496,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
 | "single": []
 | "double": []
 | "bool": []
-| "array": { "arr-length": ?<int>?
+| "array": { "arr-length": ?<expression>?
            , "inner-ty": <type>
            }
 }
@@ -508,6 +510,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
 
 { "lit-int": <int>
 | "lit-string": <string>
+| "lit-array": [ <expr> ]
 | "lit-true": []
 }
 \end{jsoncode}
