@@ -24,9 +24,11 @@ instance Pretty Import where
 
 instance Pretty Network where
   ppr (Network i ps is) =
-    text "network" <+>
-    ppr i <+>
-    parens (commasep $ map param ps) <+> braces (indent' (stack (map ppr is)))
+      text "network" <+>
+       ppr i <+>
+       parens (commasep $ map param ps) </>
+       hang' (lbrace </> stack (map ppr is)) </>
+    rbrace
     where
       param (d, e) = ppr d <+> ppr e
 
@@ -49,12 +51,13 @@ instance Pretty Range where
 
 instance Pretty Process where
   ppr (Process n ps ds bs c) =
-    hang' $
-    ppIf c (text "sync") <+>
-    text "proc" <+>
-    ppr n <+>
-    parens (commasep (map param ps)) </> stack (map ppr ds) </>
-    braces (stack (map ppr bs))
+    hang'
+      (ppIf c (text "sync") <+>
+       text "proc" <+>
+       ppr n <+> parens (commasep (map param ps)) </> stack (map ppr ds)) </>
+    hang' (lbrace </> stack (map ppr bs)) </>
+    rbrace <>
+    line
     where
       param (d, i) = ppr d <+> ppr i
 
@@ -82,16 +85,18 @@ instance Pretty Function where
 instance Pretty Statement where
   ppr (Assign i v) = ppr i <+> text "=" <+> ppr v <> semi
   ppr (If c bs ei e) =
-    text "if" <+>
-    parens (ppr c) <+>
-    braces (indent' (stack $ map ppr bs)) </> stack (map (ppr . elifBlock) ei) </>
+    hang' (text "if" <+> parens (ppr c) <+> lbrace </> stack (map ppr bs)) </>
+    rbrace <>
+    stack (map (ppr . elifBlock) ei) <>
     ppr (elblock <$> e)
     where
       elifBlock (ee, ss) =
-        text "elif" <+>
-        parens (ppr ee) <+> braces (indent' (stack $ map ppr ss))
+        hang' (space <> text "elif" <+>
+        parens (ppr ee) <+>
+        lbrace </> stack (map ppr ss)) </> rbrace
       elblock [] = empty
-      elblock ss = text "else" <+> braces (indent' (stack $ map ppr ss))
+      elblock ss =
+        hang' (space <> text "else" <+> lbrace </> stack (map ppr ss)) </> rbrace
   ppr (For v f t bs) =
     ppr "for" <+>
     ppr v <+>
