@@ -14,7 +14,7 @@ import qualified Language.SMEIL.Syntax       as S
 -- Top level constructs
 
 designFile :: Parser S.DesignFile
-designFile = spaceConsumer >> S.DesignFile <$> some designUnit
+designFile = spaceConsumer >> S.DesignFile <$> some designUnit <* eof
 
 designUnit :: Parser S.DesignUnit
 designUnit = S.DesignUnit <$> many importStm <*> some unitElement
