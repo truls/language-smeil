@@ -40,14 +40,15 @@ instance Pretty NetworkDecl where
 instance Pretty Bus where
   ppr (Bus e n ss) =
     ppIf e (text "exposed") <+>
-    text "bus" <+> ppr n <+> braces (stack $ map (\s -> ppr s <> semi) ss) <> semi
+    text "bus" <+>
+    ppr n <+> braces (stack $ map (\s -> ppr s <> semi) ss) <> semi
 
 instance Pretty BusSignal where
   ppr (BusSignal n t v r) =
     ppr n <> colon <+> ppr t <+> ppr (catL (text "= ") v) <+> ppr r
 
 instance Pretty Range where
-  ppr (Range u l) = text "range" <+> ppr u <+>  text "to" <+> ppr l
+  ppr (Range u l) = text "range" <+> ppr u <+> text "to" <+> ppr l
 
 instance Pretty Process where
   ppr (Process n ps ds bs c) =
@@ -70,7 +71,9 @@ instance Pretty Declaration where
 instance Pretty Variable where
   ppr (Variable n t v r) =
     text "var" <+>
-    ppr n <> colon <+> ppr t <+> ppr (catL (text "=") v) <+> ppr r <> semi
+    ppr n <> colon <+>
+    ppr t <> ppr (catL (space <> equals <> space) v) <> ppr (catL space r) <>
+    semi
 
 instance Pretty Constant where
   ppr (Constant n t v) =
@@ -91,12 +94,14 @@ instance Pretty Statement where
     ppr (elblock <$> e)
     where
       elifBlock (ee, ss) =
-        hang' (space <> text "elif" <+>
-        parens (ppr ee) <+>
-        lbrace </> stack (map ppr ss)) </> rbrace
+        hang'
+          (space <> text "elif" <+>
+           parens (ppr ee) <+> lbrace </> stack (map ppr ss)) </>
+        rbrace
       elblock [] = empty
       elblock ss =
-        hang' (space <> text "else" <+> lbrace </> stack (map ppr ss)) </> rbrace
+        hang' (space <> text "else" <+> lbrace </> stack (map ppr ss)) </>
+        rbrace
   ppr (For v f t bs) =
     ppr "for" <+>
     ppr v <+>
