@@ -120,6 +120,7 @@ reservedWords =
   , "simulation"
   , "switch"
   , "sync"
+  , "return"
   , "to"
   , "var"
   , "where"
