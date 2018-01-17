@@ -175,8 +175,8 @@ term =
   choice
     [ parens expression
     , S.PrimLit <$> (literal <|> arrayLit)
+    , try funCall
     , S.PrimName <$> name
-    , funCall
     ] <?>
   "term"
   where
