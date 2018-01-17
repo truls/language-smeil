@@ -70,7 +70,9 @@ instanceDecl =
     transformIdent i   = Just i
 
 enum :: Parser S.Enumeration
-enum = reserved "enum" >> S.Enumeration <$> ident <*> braces (some enumField) <* semi
+enum =
+  reserved "enum" >>
+  S.Enumeration <$> ident <*> braces (enumField `sepBy1` comma) <* semi
   where
     enumField = (,) <$> ident <*> optional (symbol "=" *> expression)
 
@@ -144,7 +146,7 @@ statement =
       where
         switchCase =
           reserved "case" >>
-          (,) <$> (expression <* colon) <*> some statement <?> "switch case"
+          (,) <$> expression <*> braces (some statement) <?> "switch case"
         defaultCase = reserved "default" >> colon *> some statement
     barrierStm = reserved "barrier" >> semi >> pure S.Barrier
     breakStm = reserved "break" >> semi >> pure S.Break

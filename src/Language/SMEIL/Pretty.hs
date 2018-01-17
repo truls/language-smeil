@@ -83,7 +83,8 @@ instance Pretty Function where
   ppr (Function n ps bs) =
     hang'
       (text "func" <+>
-       ppr n <> parens (commasep $ map ppr ps) <+> braces (stack $ map ppr bs))
+       ppr n <> parens (commasep $ map ppr ps) <+> lbrace </> stack (map ppr bs)) </>
+    rbrace
 
 instance Pretty Statement where
   ppr (Assign i v) = ppr i <+> text "=" <+> ppr v <> semi
@@ -110,19 +111,24 @@ instance Pretty Statement where
        ppr f <+> text "to" <+> ppr t <+> lbrace </> stack (map ppr bs)) </>
     rbrace
   ppr (Switch v cs ds) =
-    ppr "switch" <+>
-    parens (ppr v) </> braces (stack (map scase cs) </> ppr (dcase <$> ds))
+    hang'
+      (ppr "switch" <+>
+       parens (ppr v) <+>
+       lbrace </> (stack (map scase cs) </> ppr (dcase <$> ds))) </>
+    rbrace
     where
       scase (e, ss) =
-        hang' (text "case" <+> ppr e <> colon </> stack (map ppr ss))
-      dcase ss = hang' (text "default" <> colon </> stack (map ppr ss))
+        hang' (text "case" <+> ppr e <+> lbrace </> stack (map ppr ss)) </>
+        rbrace
+      dcase ss =
+        hang' (text "default" </> lbrace </> stack (map ppr ss)) </> rbrace
   ppr Barrier = text "barrier" <> semi
   ppr Break = text "break" <> semi
   ppr (Return v) = text "return" <+> ppr v <> semi
 
 instance Pretty Enumeration where
   ppr (Enumeration n fs) =
-    hang' (text "enum" <+> ppr n <+> braces (commasep (map field fs)))
+    hang' (text "enum" <+> ppr n <+> lbrace </> commasep (map field fs)) </> rbrace
     where
       field :: (Ident, Maybe Expr) -> Doc
       field (i, e) = ppr i <+> ppr (catL (text "=") e)
