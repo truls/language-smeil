@@ -103,10 +103,12 @@ instance Pretty Statement where
         hang' (space <> text "else" <+> lbrace </> stack (map ppr ss)) </>
         rbrace
   ppr (For v f t bs) =
-    ppr "for" <+>
-    ppr v <+>
-    text "=" <+>
-    ppr f <+> text "to" <+> ppr t <+> braces (indent' (stack $ map ppr bs))
+    hang'
+      (ppr "for" <+>
+       ppr v <+>
+       text "=" <+>
+       ppr f <+> text "to" <+> ppr t <+> lbrace </> stack (map ppr bs)) </>
+    rbrace
   ppr (Switch v cs ds) =
     ppr "switch" <+>
     parens (ppr v) </> braces (stack (map scase cs) </> ppr (dcase <$> ds))
