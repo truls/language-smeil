@@ -1,57 +1,61 @@
-// Allops smeil example
+// Allops SMEIL example. Variation with multiple instance of a singe calculator
+// process parameterized with an enum.
 
 sync proc producer (const num1, const num2)
-        bus outbus {
+        exposed bus valbus {
             data1: u32;
             data2: u32;
         };
 {
-        outbus.data1 = num2;
-        outbus.data2 = num2;
+        valbus.data1 = num1;
+        valbus.data2 = num2;
 }
 
-sync proc add (in inp, out outp)
+sync proc op (in inp, const operator)
+  enum operators {
+    ADD, DIV, MUL, SUB
+  };
+
+  bus outp {
+    val: i32;
+  };
 {
-        outp.add = inp.data1 + inp.data2;
-}
-sync proc div (in inp, out outp)
-{
-        outp.div = inp.data1 + inp.data2;
+   switch operator where {
+     case ADD {
+        outp.val = inp.data1 + inp.data2;
+     }
+     case DIV {
+        outp.val = inp.data1 / inp.data2;
+     }
+     case MUL {
+        outp.val = inp.data1 * inp.data2;
+     }
+     case SUB {
+        outp.val = inp.data1 - inp.data2;
+     }
+   }
 }
 
-sync proc mul (in inp, out outp)
-{
-        outp.mul = inp.data1 + inp.data2;
-}
+sync proc sink ([]in results, out result)
+   var sum: i32;
 
-sync proc sub (in input, out output)
 {
-        outp.sub = inp.data1 - inp.data2;
-}
-
-sync proc sink (out result)
-        bus inbus {
-            add: u32 = 0;
-            sub: u32 = 0;
-            mul: u32 = 0;
-            div: u32 = 0;
-        };
-{
-        result.agg = inbus.add + inbus.div + inbus.mul + inbus.sub;
+    sum = 0;
+    for i = 1 to len(results) {
+       sum = sum + results[i].val;
+    }
+    result.agg = sum;
 }
 
 network all_ops (out result) {
-
-        exposed bus result {
-            agg: i32;
-        };
+    exposed bus result {
+       agg: i32;
+    };
 
         instance prod of producer (num1: 4, num2: 9);
-        instance prod2 of producer (num1: 10, num2: 5);
-        instance _ of add (inp: prod.outbus, outp: s.inbus);
-        instance _ of div (inp: prod.outbus, outp: s.inbus);
-        instance _ of mul (inp: prod.outbus, outp: s.inbus);
-        instance _ of sub (inp: prod2.outbus, outp: s.inbus);
-        instance s of sink (result: all_ops.result);
-
+        // instance prod2 of producer (num1: 10, num2: 5);
+        for i = 0 to len(op.operators) {
+           instance opproc[i] of op(operator: i, inp: prod.valbus);
+        }
+        instance s of sink (results: opproc[*].outp, out result);
 }
