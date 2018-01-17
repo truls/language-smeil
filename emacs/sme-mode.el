@@ -28,24 +28,27 @@
   "Hook for `sme-mode` that is run whenever the mode is entered.")
 
 (defconst sme-keywords
-  '("bus"
+  '("barrier"
+    "break"
+    "bus"
+    "default"
     "elif"
     "else"
     "for"
     "func"
     "if"
+    "import"
     "instance"
     "network"
     "of"
     "proc"
     "range"
+    "return"
     "simulation"
     "switch"
     "to"
     "var"
-    "where"
-    "import"
-    "return")
+    "where")
   "SME keywords.")
 
 (defconst sme-types
