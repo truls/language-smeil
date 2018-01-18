@@ -226,27 +226,30 @@ table =
   , [binary "|" S.Binary S.OrOp]
   ]
 
-binary :: String -> (a -> b -> b -> SrcSpan -> b) -> (SrcSpan -> a) -> Operator Parser b
-binary n f g = InfixL go
-  where
-    go = do
-      putPos
-      _ <- symbol n
-      pos <- makePos'
-      let g' = g pos
-      return (\s r -> f g' s r pos)
+posSymbol :: String -> (SrcSpan -> a) -> Parser (a, SrcSpan)
+posSymbol s f = do
+  putPos
+  _ <- symbol s
+  pos <- makePos'
+  return (f pos, pos)
 
-prefix :: String -> (a -> b -> SrcSpan -> b) -> (SrcSpan -> a) -> Operator Parser b
-prefix n f g = Prefix go
-  where
-    go = do
-      putPos
-      _ <- symbol n
-      pos <- makePos'
-      let g' = g pos
-      return (\s -> f g' s pos)
+binary :: String
+       -> (a -> b -> b -> SrcSpan -> b)
+       -> (SrcSpan -> a)
+       -> Operator Parser b
+binary n f g =
+  InfixL
+    (do (g', pos) <- posSymbol n g
+        return (\s r -> f g' s r pos))
 
---prefix n f = Prefix (f <$ symbol n)
+prefix :: String
+       -> (a -> b -> SrcSpan -> b)
+       -> (SrcSpan -> a)
+       -> Operator Parser b
+prefix n f g =
+  Prefix
+    (do (g', pos) <- posSymbol n g
+        return (\s -> f g' s pos))
 
 typeName :: Parser (S.Type SrcSpan)
 typeName =
