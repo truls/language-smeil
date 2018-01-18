@@ -13,36 +13,36 @@ import qualified Language.SMEIL.Syntax       as S
 
 -- Top level constructs
 
-designFile :: Parser S.DesignFile
-designFile = spaceConsumer >> S.DesignFile <$> some designUnit <* eof
+designFile :: Parser (S.DesignFile SrcSpan)
+designFile = withPos $ spaceConsumer >> S.DesignFile <$> some designUnit <* eof
 
-designUnit :: Parser S.DesignUnit
-designUnit = S.DesignUnit <$> many importStm <*> some unitElement
+designUnit :: Parser (S.DesignUnit SrcSpan)
+designUnit = withPos $ S.DesignUnit <$> many importStm <*> some unitElement
 
-unitElement :: Parser S.UnitElement
-unitElement = choice [ S.UnitProc <$> process
+unitElement :: Parser (S.UnitElement SrcSpan)
+unitElement = withPos $ choice [ S.UnitProc <$> process
                      , S.UnitNet <$> network
                      ]
 
 -- Network Structure
 
-importStm :: Parser S.Import
-importStm = reserved "import" >> S.Import <$> name <* semi
+importStm :: Parser (S.Import SrcSpan)
+importStm = withPos $ reserved "import" >> S.Import <$> name <* semi
 
-network :: Parser S.Network
-network =
+network :: Parser (S.Network SrcSpan)
+network = withPos $
   reserved "network" >>
   S.Network <$> ident <*> parens (param `sepBy` comma) <*>
   braces (some networkDecl)
 
-networkDecl :: Parser S.NetworkDecl
-networkDecl = choice [ S.NetInst <$> instanceDecl
+networkDecl :: Parser (S.NetworkDecl SrcSpan)
+networkDecl = withPos $ choice [ S.NetInst <$> instanceDecl
                      , S.NetBus <$> busDecl
                      , S.NetConst <$> constDecl
                      ]
 
-process :: Parser S.Process
-process = do
+process :: Parser (S.Process SrcSpan)
+process = withPos $ do
   sync <- synchrony
   void $ reserved "proc"
   S.Process <$> ident <*> parens (param `sepBy` comma) <*> many declaration <*>
@@ -53,13 +53,16 @@ process = do
       reserved "sync" *> pure True <|> reserved "async" *> pure False <|>
       pure False
 
-param :: Parser (S.Direction, S.Ident)
-param = (,) <$> direction <*> ident
+param :: Parser (S.Direction SrcSpan, S.Ident)
+param = do
+  dir <- direction
+  i <- ident
+  return (dir, i)
 
 -- Definitions
 
-instanceDecl :: Parser S.Instance
-instanceDecl =
+instanceDecl :: Parser (S.Instance SrcSpan)
+instanceDecl = withPos $
   reserved "instance" >>
   S.Instance <$> ((transformIdent <$> ident) <* reserved "of") <*> ident <*>
   parens (paramMap `sepBy` comma) <*
@@ -69,18 +72,19 @@ instanceDecl =
     transformIdent "_" = Nothing
     transformIdent i   = Just i
 
-enum :: Parser S.Enumeration
-enum =
+enum :: Parser (S.Enumeration SrcSpan)
+enum = withPos $
   reserved "enum" >>
   S.Enumeration <$> ident <*> braces (enumField `sepBy1` comma) <* semi
   where
     enumField = (,) <$> ident <*> optional (symbol "=" *> expression)
 
-busDecl :: Parser S.Bus
+busDecl :: Parser (S.Bus SrcSpan)
 busDecl =
-  S.Bus <$> parses (reserved "exposed") <*> (reserved "bus" *> ident) <*>
-  braces (some signalDecl) <*
-  semi <?> "bus declaration"
+  withPos
+    (S.Bus <$> parses (reserved "exposed") <*> (reserved "bus" *> ident) <*>
+     braces (some (withPos signalDecl)) <*
+     semi <?> "bus declaration")
   where
     signalDecl =
       S.BusSignal <$> (ident <* colon) <*> typeName <*>
@@ -88,43 +92,54 @@ busDecl =
       optional range <*
       semi <?> "bus signal declaration"
 
-varDecl :: Parser S.Variable
+varDecl :: Parser (S.Variable SrcSpan)
 varDecl =
-  reserved "var" >>
-  S.Variable <$> (ident <* colon) <*> typeName <*> optional (symbol "=" *> expression) <*>
-  optional range <*
-  semi <?> "variable declaration"
+  withPos
+    (reserved "var" >>
+     S.Variable <$> (ident <* colon) <*> typeName <*>
+     optional (symbol "=" *> expression) <*>
+     optional range <*
+     semi <?> "variable declaration")
 
-range :: Parser S.Range
+range :: Parser (S.Range SrcSpan)
 range =
-  reserved "range" >>
-  S.Range <$> expression <* reserved "to" <*> expression <?> "range constraint"
+  withPos
+    (reserved "range" >>
+     S.Range <$> expression <* reserved "to" <*>
+     expression <?> "range constraint")
 
-constDecl :: Parser S.Constant
+constDecl :: Parser (S.Constant SrcSpan)
 constDecl =
-  reserved "const" >>
-  S.Constant <$> (ident <* colon) <*> typeName <*> (symbol "=" *> expression) <*
-  semi <?> "constant declaration"
+  withPos
+    (reserved "const" >>
+     S.Constant <$> (ident <* colon) <*> typeName <*> (symbol "=" *> expression) <*
+     semi <?> "constant declaration")
 
-function :: Parser S.Function
+function :: Parser (S.Function SrcSpan)
 function =
-  reserved "func" >> S.Function <$> ident <*> many ident <*> many statement <?> "function"
+  withPos
+    (reserved "func" >>
+     S.Function <$> ident <*> many ident <*> many statement <?> "function")
 
-declaration :: Parser S.Declaration
-declaration = choice [ S.VarDecl <$> varDecl
-                     , S.ConstDecl <$> constDecl
-                     , S.BusDecl <$> busDecl
-                     , S.FuncDecl <$> function
-                     ] <?> "declaration"
+declaration :: Parser (S.Declaration SrcSpan)
+declaration =
+  choice
+    [ S.VarDecl <$> varDecl
+    , S.ConstDecl <$> constDecl
+    , S.BusDecl <$> busDecl
+    , S.FuncDecl <$> function
+    ] <?>
+  "declaration"
 
 ---------------------------------------------------------------------------------
 -- Statements
 ---------------------------------------------------------------------------------
 
-statement :: Parser S.Statement
+statement :: Parser (S.Statement SrcSpan)
 statement =
-  ifStm <|> forStm <|> switchStm <|> barrierStm <|> breakStm <|> returnStm <|>
-  assignStm <?> "statement"
+  withPos
+    (ifStm <|> forStm <|> switchStm <|> barrierStm <|> breakStm <|> returnStm <|>
+     assignStm <?> "statement")
   where
     assignStm = S.Assign <$> (name <* equal) <*> expression <* semi
     ifStm =
@@ -152,70 +167,90 @@ statement =
     breakStm = reserved "break" >> semi >> pure S.Break
     returnStm = reserved "return" >> S.Return <$> optional expression <* semi
 
-name :: Parser S.Name
-name = (ident >>= rest) <?> "name"
+name :: Parser (S.Name SrcSpan)
+name = putPos >> ident >>= rest <?> "name"
   where
     rest context =
       choice
-        [ dot >> S.HierAccess <$> ((:) context <$> ident `sepBy1` dot) >>= rest2
-        , rest2 $ S.Ident context
-        , pure $ S.Ident context
+        [ dot >> withPos (S.HierAccess <$> ((:) context <$> ident `sepBy1` dot)) >>=
+          rest2
+        , makePos (pure $ S.Ident context) >>= rest2
+        , makePos $ pure $ S.Ident context
         ]
     rest2 context =
       choice
-        [S.ArrayAccess <$> pure context <*> brackets expression, pure context]
+        [ withPos (S.ArrayAccess <$> pure context <*> brackets expression)
+        , pure context
+        ]
 
 -------------------------------------------------------------------------------
 -- Expressions
 -------------------------------------------------------------------------------
 
-expression :: Parser S.Expr
+expression :: Parser (S.Expr SrcSpan)
 expression = makeExprParser term table <?> "expression"
 
-term :: Parser S.Expr
+term :: Parser (S.Expr SrcSpan)
 term =
   choice
     [ parens expression
-    , S.PrimLit <$> (literal <|> arrayLit)
-    , try funCall
-    , S.PrimName <$> name
+    , withPos $ S.PrimLit <$> (literal <|> withPos arrayLit)
+    , try (withPos funCall)
+    , withPos $ S.PrimName <$> name
     ] <?>
   "term"
   where
     funCall = S.FunCall <$> name <*> parens (expression `sepBy1` comma)
     arrayLit = S.LitArray <$> brackets (expression `sepBy` comma)
 
-table :: [[Operator Parser S.Expr]]
+table :: [[Operator Parser (S.Expr SrcSpan)]]
 table =
-  [ [ prefix "+" (S.Unary S.UnPlus)
-    , prefix "-" (S.Unary S.UnMinus)
-    , prefix "!" (S.Unary S.NotOp)
+  [ [ prefix "+" S.Unary S.UnPlus
+    , prefix "-" S.Unary S.UnMinus
+    , prefix "!" S.Unary S.NotOp
     ]
-  , [ binary "*" (S.Binary S.MulOp)
-    , binary "/" (S.Binary S.DivOp)
-    , binary "%" (S.Binary S.ModOp)
+  , [ binary "*" S.Binary S.MulOp
+    , binary "/" S.Binary S.DivOp
+    , binary "%" S.Binary S.ModOp
     ]
-  , [binary "+" (S.Binary S.PlusOp), binary "-" (S.Binary S.MinusOp)]
-  , [binary "<<" (S.Binary S.SllOp), binary ">>" (S.Binary S.SrlOp)]
-  , [ binary "<" (S.Binary S.LtOp)
-    , binary ">" (S.Binary S.GtOp)
-    , binary "<=" (S.Binary S.GeqOp)
-    , binary ">=" (S.Binary S.LeqOp)
-    , binary "==" (S.Binary S.EqOp)
+  , [binary "+" S.Binary S.PlusOp, binary "-" S.Binary S.MinusOp]
+  , [binary "<<" S.Binary S.SllOp, binary ">>" S.Binary S.SrlOp]
+  , [ binary "<" S.Binary S.LtOp
+    , binary ">" S.Binary S.GtOp
+    , binary "<=" S.Binary S.GeqOp
+    , binary ">=" S.Binary S.LeqOp
+    , binary "==" S.Binary S.EqOp
     ]
-  , [binary "&" (S.Binary S.AndOp)]
-  , [binary "^" (S.Binary S.XorOp)]
-  , [binary "|" (S.Binary S.OrOp)]
+  , [binary "&" S.Binary S.AndOp]
+  , [binary "^" S.Binary S.XorOp]
+  , [binary "|" S.Binary S.OrOp]
   ]
 
-binary :: String -> (a -> a -> a) -> Operator Parser a
-binary n f = InfixL (f <$ symbol n)
+binary :: String -> (a -> b -> b -> SrcSpan -> b) -> (SrcSpan -> a) -> Operator Parser b
+binary n f g = InfixL go
+  where
+    go = do
+      putPos
+      _ <- symbol n
+      pos <- makePos'
+      let g' = g pos
+      return (\s r -> f g' s r pos)
 
-prefix :: String -> (a -> a) -> Operator Parser a
-prefix n f = Prefix (f <$ symbol n)
+prefix :: String -> (a -> b -> SrcSpan -> b) -> (SrcSpan -> a) -> Operator Parser b
+prefix n f g = Prefix go
+  where
+    go = do
+      putPos
+      _ <- symbol n
+      pos <- makePos'
+      let g' = g pos
+      return (\s -> f g' s pos)
 
-typeName :: Parser S.Type
+--prefix n f = Prefix (f <$ symbol n)
+
+typeName :: Parser (S.Type SrcSpan)
 typeName =
+  withPos $
   choice
     [ char 'i' >> S.Signed <$> integer
     , char 'u' >> S.Unsigned <$> integer

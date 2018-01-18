@@ -9,21 +9,21 @@ import           Language.SMEIL.Syntax
 import           Text.PrettyPrint.Mainland
 import           Text.PrettyPrint.Mainland.Class
 
-instance Pretty DesignFile where
-  ppr (DesignFile du) = stack $ map ppr du
+instance Pretty (DesignFile a) where
+  ppr (DesignFile du _) = stack $ map ppr du
 
-instance Pretty DesignUnit where
-  ppr (DesignUnit i es) = stack (map ppr i) </> stack (map ppr es)
+instance Pretty (DesignUnit a) where
+  ppr (DesignUnit i es _) = stack (map ppr i) </> stack (map ppr es)
 
-instance Pretty UnitElement where
-  ppr (UnitProc p) = ppr p
-  ppr (UnitNet n)  = ppr n
+instance Pretty (UnitElement a) where
+  ppr (UnitProc p _) = ppr p
+  ppr (UnitNet n _)  = ppr n
 
-instance Pretty Import where
-  ppr (Import s) = text "import" <+> ppr s <> semi
+instance Pretty (Import a) where
+  ppr (Import s _) = text "import" <+> ppr s <> semi
 
-instance Pretty Network where
-  ppr (Network i ps is) =
+instance Pretty (Network a) where
+  ppr (Network i ps is _) =
       text "network" <+>
        ppr i <+>
        parens (commasep $ map param ps) </>
@@ -32,26 +32,26 @@ instance Pretty Network where
     where
       param (d, e) = ppr d <+> ppr e
 
-instance Pretty NetworkDecl where
-  ppr (NetInst i)  = ppr i
-  ppr (NetBus b)   = ppr b
-  ppr (NetConst c) = ppr c
+instance Pretty (NetworkDecl a) where
+  ppr (NetInst i _)  = ppr i
+  ppr (NetBus b _)   = ppr b
+  ppr (NetConst c _) = ppr c
 
-instance Pretty Bus where
-  ppr (Bus e n ss) =
+instance Pretty (Bus a) where
+  ppr (Bus e n ss _) =
     ppIf e (text "exposed") <+>
     text "bus" <+>
     ppr n <+> braces (stack $ map (\s -> ppr s <> semi) ss) <> semi
 
-instance Pretty BusSignal where
-  ppr (BusSignal n t v r) =
+instance Pretty (BusSignal a) where
+  ppr (BusSignal n t v r _) =
     ppr n <> colon <+> ppr t <+> ppr (catL (text "= ") v) <+> ppr r
 
-instance Pretty Range where
-  ppr (Range u l) = text "range" <+> ppr u <+> text "to" <+> ppr l
+instance Pretty (Range a) where
+  ppr (Range u l _) = text "range" <+> ppr u <+> text "to" <+> ppr l
 
-instance Pretty Process where
-  ppr (Process n ps ds bs c) =
+instance Pretty (Process a) where
+  ppr (Process n ps ds bs c _) =
     hang'
       (ppIf c (text "sync") <+>
        text "proc" <+>
@@ -62,33 +62,33 @@ instance Pretty Process where
     where
       param (d, i) = ppr d <+> ppr i
 
-instance Pretty Declaration where
+instance Pretty (Declaration a) where
   ppr (VarDecl v)   = ppr v
   ppr (ConstDecl c) = ppr c
   ppr (BusDecl b)   = ppr b
   ppr (FuncDecl f)  = ppr f
 
-instance Pretty Variable where
-  ppr (Variable n t v r) =
+instance Pretty (Variable a) where
+  ppr (Variable n t v r _) =
     text "var" <+>
     ppr n <> colon <+>
     ppr t <> ppr (catL (space <> equals <> space) v) <> ppr (catL space r) <>
     semi
 
-instance Pretty Constant where
-  ppr (Constant n t v) =
+instance Pretty (Constant a) where
+  ppr (Constant n t v _) =
     text "const" <+> ppr n <> colon <+> ppr t <+> equals <+> ppr v <> semi
 
-instance Pretty Function where
-  ppr (Function n ps bs) =
+instance Pretty (Function a) where
+  ppr (Function n ps bs _) =
     hang'
       (text "func" <+>
        ppr n <> parens (commasep $ map ppr ps) <+> lbrace </> stack (map ppr bs)) </>
     rbrace
 
-instance Pretty Statement where
-  ppr (Assign i v) = ppr i <+> text "=" <+> ppr v <> semi
-  ppr (If c bs ei e) =
+instance Pretty (Statement a) where
+  ppr (Assign i v _) = ppr i <+> text "=" <+> ppr v <> semi
+  ppr (If c bs ei e _) =
     hang' (text "if" <+> parens (ppr c) <+> lbrace </> stack (map ppr bs)) </>
     rbrace <>
     stack (map (ppr . elifBlock) ei) <>
@@ -103,14 +103,14 @@ instance Pretty Statement where
       elblock ss =
         hang' (space <> text "else" <+> lbrace </> stack (map ppr ss)) </>
         rbrace
-  ppr (For v f t bs) =
+  ppr (For v f t bs _) =
     hang'
       (ppr "for" <+>
        ppr v <+>
        text "=" <+>
        ppr f <+> text "to" <+> ppr t <+> lbrace </> stack (map ppr bs)) </>
     rbrace
-  ppr (Switch v cs ds) =
+  ppr (Switch v cs ds _) =
     hang'
       (ppr "switch" <+>
        parens (ppr v) <+>
@@ -122,31 +122,31 @@ instance Pretty Statement where
         rbrace
       dcase ss =
         hang' (text "default" </> lbrace </> stack (map ppr ss)) </> rbrace
-  ppr Barrier = text "barrier" <> semi
-  ppr Break = text "break" <> semi
-  ppr (Return v) = text "return" <+> ppr v <> semi
+  ppr (Barrier _) = text "barrier" <> semi
+  ppr (Break _) = text "break" <> semi
+  ppr (Return v _) = text "return" <+> ppr v <> semi
 
-instance Pretty Enumeration where
-  ppr (Enumeration n fs) =
+instance Pretty (Enumeration a) where
+  ppr (Enumeration n fs _) =
     hang' (text "enum" <+> ppr n <+> lbrace </> commasep (map field fs)) </> rbrace
     where
-      field :: (Ident, Maybe Expr) -> Doc
+      field :: (Ident, Maybe (Expr a)) -> Doc
       field (i, e) = ppr i <+> ppr (catL (text "=") e)
 
-instance Pretty Direction where
-  ppr In    = text "in"
-  ppr Out   = text "out"
-  ppr Const = text "const"
+instance Pretty (Direction a) where
+  ppr (In _)    = text "in"
+  ppr (Out _)   = text "out"
+  ppr (Const _) = text "const"
 
-instance Pretty Expr where
-  ppr (Binary op e1 e2) = ppr e1 <+> ppr op <+> ppr e2
-  ppr (Unary op e1)     = ppr op <> ppr e1
-  ppr (PrimLit l)       = ppr l
-  ppr (PrimName n)      = ppr n
-  ppr (FunCall n ps)    = ppr n <> parens (commasep (map ppr ps))
+instance Pretty (Expr a) where
+  ppr (Binary op e1 e2 _) = ppr e1 <+> ppr op <+> ppr e2
+  ppr (Unary op e1 _)     = ppr op <> ppr e1
+  ppr (PrimLit l _)       = ppr l
+  ppr (PrimName n _)      = ppr n
+  ppr (FunCall n ps _)    = ppr n <> parens (commasep (map ppr ps))
 
-instance Pretty Instance where
-  ppr (Instance i e ps) =
+instance Pretty (Instance a) where
+  ppr (Instance i e ps _) =
     text "instance" <+>
     ppr (toInstName i) <+>
     text "of" <+> ppr e <+> parens (commasep $ map param ps) <> semi
@@ -156,49 +156,49 @@ instance Pretty Instance where
       toInstName (Just a) = a
       toInstName Nothing  = "_"
 
-instance Pretty BinOp where
-  ppr PlusOp  = text "+"
-  ppr MinusOp = text "-"
-  ppr MulOp   = text "*"
-  ppr DivOp   = text "/"
-  ppr ModOp   = text "%"
-  ppr EqOp    = text "=="
-  ppr NeqOp   = text "!="
-  ppr SllOp   = text "<<"
-  ppr SrlOp   = text ">>"
-  ppr LtOp    = text "<"
-  ppr GtOp    = text ">"
-  ppr LeqOp   = text "<="
-  ppr GeqOp   = text ">="
-  ppr AndOp   = text "&"
-  ppr OrOp    = text "|"
-  ppr XorOp   = text "^"
+instance Pretty (BinOp a) where
+  ppr (PlusOp _)  = text "+"
+  ppr (MinusOp _) = text "-"
+  ppr (MulOp _)   = text "*"
+  ppr (DivOp _)   = text "/"
+  ppr (ModOp _)   = text "%"
+  ppr (EqOp _)    = text "=="
+  ppr (NeqOp _)   = text "!="
+  ppr (SllOp _)   = text "<<"
+  ppr (SrlOp _)   = text ">>"
+  ppr (LtOp _)    = text "<"
+  ppr (GtOp _)    = text ">"
+  ppr (LeqOp _)   = text "<="
+  ppr (GeqOp _)   = text ">="
+  ppr (AndOp _)   = text "&"
+  ppr (OrOp _)    = text "|"
+  ppr (XorOp _)   = text "^"
 
-instance Pretty UnOp where
-  ppr UnPlus  = text "+"
-  ppr UnMinus = text "-"
-  ppr NotOp   = text "!"
+instance Pretty (UnOp a) where
+  ppr (UnPlus _)  = text "+"
+  ppr (UnMinus _) = text "-"
+  ppr (NotOp _)   = text "!"
 
-instance Pretty Name where
-  ppr (Ident i)         = ppr i
-  ppr (HierAccess is)   = cat $ punctuate dot (map ppr is)
-  ppr (ArrayAccess n e) = ppr n <> brackets (ppr e)
+instance Pretty (Name a) where
+  ppr (Ident i _)         = ppr i
+  ppr (HierAccess is _)   = cat $ punctuate dot (map ppr is)
+  ppr (ArrayAccess n e _) = ppr n <> brackets (ppr e)
 
-instance Pretty Type where
-  ppr (Signed s)   = text "i" <> ppr s
-  ppr (Unsigned s) = text "u" <> ppr s
-  ppr Single       = text "f32"
-  ppr Double       = text "f64"
-  ppr Bool         = text "bool"
-  ppr (Array l t)  = brackets (ppr l) <> ppr t
+instance Pretty (Type a) where
+  ppr (Signed s _)   = text "i" <> ppr s
+  ppr (Unsigned s _) = text "u" <> ppr s
+  ppr (Single _)     = text "f32"
+  ppr (Double _)     = text "f64"
+  ppr (Bool _)       = text "bool"
+  ppr (Array l t _)  = brackets (ppr l) <> ppr t
 
-instance Pretty Literal where
-  ppr (LitInt i)    = integer i
-  ppr (LitFloat f)  = double f
-  ppr (LitString s) = dquotes $ ppr s
-  ppr (LitArray es) = brackets (commasep (map ppr es))
-  ppr LitTrue       = text "true"
-  ppr LitFalse      = text "false"
+instance Pretty (Literal a) where
+  ppr (LitInt i _)    = integer i
+  ppr (LitFloat f _)  = double f
+  ppr (LitString s _) = dquotes $ ppr s
+  ppr (LitArray es _) = brackets (commasep (map ppr es))
+  ppr (LitTrue _)     = text "true"
+  ppr (LitFalse _)    = text "false"
 
 nestL :: Int
 nestL = 4

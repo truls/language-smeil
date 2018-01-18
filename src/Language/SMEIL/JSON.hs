@@ -9,6 +9,7 @@ module Language.SMEIL.JSON
   , genJSONPretty
   ) where
 
+import           Language.SMEIL.Parser
 import           Language.SMEIL.Syntax
 
 import           Control.Monad            (mapM)
@@ -23,6 +24,7 @@ import           Data.ByteString.Lazy     (ByteString)
 import           Data.Char                (isUpper, toLower)
 import           Data.List                (intercalate)
 import           Data.List.Split          (keepDelimsL, split, whenElt)
+import           Text.Megaparsec.Pos
 
 -- | Reads a bytestring of JSON and returns a SMEIL AST fragment
 readJSON
@@ -81,4 +83,7 @@ concat <$>
     , ''Name
     , ''Type
     , ''Literal
+    , ''SrcSpan
+    , ''SourcePos
+    , ''Pos
     ]

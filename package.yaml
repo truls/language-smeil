@@ -27,6 +27,7 @@ dependencies:
 - split >= 0.2.3.2
 - megaparsec >= 6.3.0
 - aeson-pretty >= 0.8.5
+- mtl >= 2.2.1
 
 ghc-options: -Wall
 

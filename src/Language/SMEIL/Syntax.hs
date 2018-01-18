@@ -5,189 +5,229 @@
 
 module Language.SMEIL.Syntax where
 
-newtype DesignFile = DesignFile
-  { units :: [DesignUnit]
+data DesignFile a = DesignFile
+  { units :: [DesignUnit a]
+  , annot :: a
   } deriving (Eq, Show)
 
-data DesignUnit = DesignUnit
-  { imports     :: [Import] -- ^ Imports of the design unit
-  , unitElement :: [UnitElement] -- ^ A unit-level process or network
+data DesignUnit a = DesignUnit
+  { imports     :: [Import a] -- ^ Imports of the design unit
+  , unitElement :: [UnitElement a] -- ^ A unit-level process or network
+  , annot       :: a
   } deriving (Eq, Show)
 
-data UnitElement
-  = UnitProc { process :: Process }
-  | UnitNet { network :: Network }
+data UnitElement a
+  = UnitProc { process :: Process a
+            ,  annot   :: a }
+  | UnitNet { network :: Network a
+           ,  annot   :: a }
   deriving (Eq, Show)
 
 -- | Specifies a module to be imported in current design module
-newtype Import = Import
-  { ident :: Name -- ^ Name of the module to be imported
+data Import a = Import
+  { ident :: Name a -- ^ Name of the module to be imported
+  , annot :: a
   } deriving (Eq, Show)
 
 -- | Instantiates either a "Process" or a "Network"
-data Instance = Instance
+data Instance a = Instance
   { instName :: Maybe Ident -- ^ The name of the instance
   , elName   :: Ident -- ^ The name of the object to initialize
-  , params   :: [(Maybe Ident, Expr)] -- ^ Optionally named parameters of the object
+  , params   :: [(Maybe Ident, Expr a)] -- ^ Optionally named parameters of the object
+  , annot    :: a
   } deriving (Eq, Show)
 
 -- | Defines a Network
-data Network = Network
+data Network a = Network
   { name     :: Ident -- ^ Name of network
-  , params   :: [(Direction, Ident)]
-  , netDecls :: [NetworkDecl] -- ^ Declarations in network
+  , params   :: [(Direction a, Ident)]
+  , netDecls :: [NetworkDecl a] -- ^ Declarations in network
+  , annot    :: a
   } deriving (Eq, Show)
 
-data NetworkDecl
-  = NetInst { inst :: Instance } -- ^ A network instance
-  | NetBus { bus :: Bus } -- ^ A network declaration
-  | NetConst { const :: Constant } -- ^ A network constant
+data NetworkDecl a
+  = NetInst { inst  :: Instance a
+           ,  annot :: a -- ^ A network instance
+            }
+  | NetBus { bus   :: Bus a
+          ,  annot :: a -- ^ A network declaration
+           }
+  | NetConst { const :: Constant a
+            ,  annot :: a -- ^ A network constant
+             }
   deriving (Eq, Show)
 
-data Bus = Bus
+data Bus a = Bus
   { exposed :: Bool -- ^Bus is exposed on top level
   , name    :: Ident -- ^Name of bus
-  , signals :: [BusSignal] -- ^Bus signals
+  , signals :: [BusSignal a] -- ^Bus signals
+  , annot   :: a
   } deriving (Eq, Show)
 
-data BusSignal = BusSignal
+data BusSignal a = BusSignal
   { name  :: Ident -- ^Name of signal
-  , ty    :: Type -- ^Type of signal
-  , value :: Maybe Expr -- ^Initial value of signal
-  , range :: Maybe Range -- ^Signal range
+  , ty    :: Type a -- ^Type of signal
+  , value :: Maybe (Expr a) -- ^Initial value of signal
+  , range :: Maybe (Range a) -- ^Signal range
+  , annot :: a
   } deriving (Eq, Show)
 
-data Range = Range
-  { lower :: Expr -- ^Lower bound
-  , upper :: Expr -- ^Upper bound
+data Range a = Range
+  { lower :: Expr a -- ^Lower bound
+  , upper :: Expr a-- ^Upper bound
+  , annot :: a
   } deriving (Eq, Show)
 
-data Process = Process
+data Process a = Process
   { name   :: Ident -- ^Name of process
-  , params :: [(Direction, Ident)] -- ^Process parameters
-  , decls  :: [Declaration] -- ^
-  , body   :: [Statement]
+  , params :: [(Direction a, Ident)] -- ^Process parameters
+  , decls  :: [Declaration a] -- ^
+  , body   :: [Statement a]
   , sync   :: Bool
+  , annot  :: a
   } deriving (Eq, Show)
 
-data Declaration
-  = VarDecl Variable
-  | ConstDecl Constant
-  | BusDecl Bus
-  | FuncDecl Function
+data Declaration a
+  = VarDecl (Variable a)
+  | ConstDecl (Constant a)
+  | BusDecl (Bus a)
+  | FuncDecl (Function a)
   deriving (Eq, Show)
 
-data Variable = Variable
+data Variable a = Variable
   { name  :: Ident
-  , ty    :: Type
-  , val   :: Maybe Expr
-  , range :: Maybe Range
+  , ty    :: Type a
+  , val   :: Maybe (Expr a)
+  , range :: Maybe (Range a)
+  , annot :: a
   } deriving (Eq, Show)
 
-data Constant = Constant
-  { name :: Ident
-  , ty   :: Type
-  , val  :: Expr
+data Constant a = Constant
+  { name  :: Ident
+  , ty    :: Type a
+  , val   :: Expr a
+  , annot :: a
   } deriving (Eq, Show)
 
-data Function = Function
+data Function a = Function
   { name   :: Ident
   , params :: [Ident]
-  , body   :: [Statement]
+  , body   :: [Statement a]
+  , annot  :: a
   } deriving (Eq, Show)
 
-data Statement
-  = Assign { dest :: Name
-          ,  val  :: Expr}
-  | If { cond :: Expr
-      ,  body :: [Statement]
-      ,  elif :: [(Expr, [Statement])]
-      ,  els  :: Maybe [Statement]}
-  | For { var  :: Ident
-       ,  from :: Expr
-       ,  to   :: Expr
-       ,  body :: [Statement]}
-  | Switch { value       :: Expr
-          ,  cases       :: [(Expr, [Statement])]
-          ,  defaultCase :: Maybe [Statement]}
-  | Barrier
-  | Break
-  | Return { retVal :: Maybe Expr }
+data Statement a
+  = Assign { dest  :: Name a
+          ,  val   :: Expr a
+          ,  annot :: a }
+  | If { cond  :: Expr a
+      ,  body  :: [Statement a]
+      ,  elif  :: [(Expr a, [Statement a])]
+      ,  els   :: Maybe [Statement a]
+      ,  annot :: a }
+  | For { var   :: Ident
+       ,  from  :: Expr a
+       ,  to    :: Expr a
+       ,  body  :: [Statement a]
+       ,  annot :: a }
+  | Switch { value       :: Expr a
+          ,  cases       :: [(Expr a, [Statement a])]
+          ,  defaultCase :: Maybe [Statement a]
+          ,  annot       :: a }
+  | Barrier { annot :: a }
+  | Break { annot :: a }
+  | Return { retVal :: Maybe (Expr a)
+          ,  annot  :: a }
   deriving (Eq, Show)
 
-data Enumeration = Enumeration
+data Enumeration a = Enumeration
   { name   :: Ident
-  , fields :: [(Ident, Maybe Expr)]
+  , fields :: [(Ident, Maybe (Expr a))]
+  , annot  :: a
   } deriving (Eq, Show)
 
-data Direction
-  = In
-  | Out
-  | Const
+data Direction a
+  = In { annot :: a }
+  | Out { annot :: a }
+  | Const { annot :: a }
   deriving (Eq, Show)
 
-data Expr
-  = Binary { binOp :: BinOp
-          ,  left  :: Expr
-          ,  right :: Expr}
-  | Unary { unOp :: UnOp
-         ,  expr :: Expr}
-  | PrimLit { lit :: Literal}
-  | PrimName { name :: Name}
-  | FunCall { name   :: Name
-            , params :: [Expr]
-            }
+data Expr a
+  = Binary { binOp :: BinOp a
+           , left  :: Expr a
+           , right :: Expr a
+           , annot :: a }
+  | Unary { unOp  :: UnOp a
+          , expr  :: Expr a
+          , annot :: a }
+  | PrimLit { lit   :: Literal a
+            , annot :: a }
+  | PrimName { name  :: Name a
+             , annot :: a}
+  | FunCall { name   :: Name a
+            , params :: [Expr a]
+            , annot  :: a }
   deriving (Eq, Show)
 
-data BinOp
-  = PlusOp
-  | MinusOp
-  | MulOp
-  | DivOp
-  | ModOp
-  | EqOp
-  | NeqOp
-  | SllOp
-  | SrlOp
-  | LtOp
-  | GtOp
-  | LeqOp
-  | GeqOp
-  | AndOp
-  | OrOp
-  | XorOp
+data BinOp a
+  = PlusOp { annot :: a }
+  | MinusOp { annot :: a }
+  | MulOp { annot :: a }
+  | DivOp { annot :: a }
+  | ModOp { annot :: a }
+  | EqOp { annot :: a }
+  | NeqOp { annot :: a }
+  | SllOp { annot :: a }
+  | SrlOp { annot :: a }
+  | LtOp { annot :: a }
+  | GtOp { annot :: a }
+  | LeqOp { annot :: a }
+  | GeqOp { annot :: a }
+  | AndOp { annot :: a }
+  | OrOp { annot :: a }
+  | XorOp { annot :: a }
   deriving (Eq, Show)
 
-data UnOp
-  = UnPlus
-  | UnMinus
-  | NotOp
+data UnOp a
+  = UnPlus { annot :: a }
+  | UnMinus { annot :: a }
+  | NotOp { annot :: a }
   deriving (Eq, Show)
 
-data Name
-  = Ident { ident :: Ident}
-  | HierAccess { idents :: [Ident]}
-  | ArrayAccess { name  :: Name
-               ,  index :: Expr}
+data Name a
+  = Ident { ident :: Ident
+         ,  annot :: a}
+  | HierAccess { idents :: [Ident]
+              ,  annot  :: a }
+  | ArrayAccess { name  :: Name a
+               ,  index :: Expr a
+               ,  annot :: a }
   deriving (Eq, Show)
 
-data Type
-  = Signed { size :: Integer}
-  | Unsigned { size :: Integer}
-  | Single
-  | Double
-  | Bool
-  | Array { arrLength :: Maybe Expr
-         ,  innerTy   :: Type}
+data Type a
+  = Signed { size  :: Integer
+           , annot :: a }
+  | Unsigned { size  :: Integer
+             , annot :: a }
+  | Single { annot :: a }
+  | Double { annot :: a }
+  | Bool { annot :: a }
+  | Array { arrLength :: Maybe (Expr a)
+          , innerTy   :: Type a
+          , annot     :: a }
   deriving (Eq, Show)
 
-data Literal
-  = LitInt Integer
-  | LitFloat Double
-  | LitString String
-  | LitArray [Expr]
-  | LitTrue
-  | LitFalse
+data Literal a
+  = LitInt { intVal :: Integer
+           , annot  :: a }
+  | LitFloat { floatVal :: Double
+             , annot    :: a }
+  | LitString { stringVal :: String
+              , annot     :: a }
+  | LitArray { arrayVal :: [Expr a]
+             , annot    :: a }
+  | LitTrue { annot :: a }
+  | LitFalse { annot :: a }
   deriving (Eq, Show)
 
 type Ident = String

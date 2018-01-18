@@ -1,15 +1,19 @@
 module Language.SMEIL.Parser
   ( parse
+  , SrcSpan
   ) where
 
 
-import qualified Text.Megaparsec            as P
+import           Control.Monad.State.Lazy
+import qualified Text.Megaparsec             as P
 
 import           Language.SMEIL.Syntax
 
 import           Language.SMEIL.Parser.Impl
+import           Language.SMEIL.Parser.Monad
 
-parse :: String -> String  -> Either String DesignFile
-parse f c  = case P.parse designFile f c of
-               Left err -> Left $ P.parseErrorPretty err
-               Right r  -> Right r
+parse :: String -> String  -> Either String (DesignFile SrcSpan)
+parse f c =
+  case P.runParser (runStateT designFile (P.initialPos f)) f c of
+    Left err     -> Left $ P.parseErrorPretty err
+    Right (r, _) -> Right r

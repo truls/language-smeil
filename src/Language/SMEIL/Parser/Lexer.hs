@@ -81,9 +81,9 @@ stringLit =
     strChar = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
       <|> (char '\\' >> char '"')
 
-literal :: Parser S.Literal
+literal :: Parser (S.Literal SrcSpan)
 literal =
-  choice
+  withPos $ choice
     [ symbol "true" >> pure S.LitTrue
     , symbol "false" >> pure S.LitFalse
     , S.LitString <$> stringLit
@@ -91,9 +91,9 @@ literal =
     , S.LitInt <$> integer
     ]
 
-direction :: Parser S.Direction
+direction :: Parser (S.Direction SrcSpan)
 direction =
-  choice
+  withPos $ choice
     [ reserved "in"    >> pure S.In
     , reserved "out"   >> pure S.Out
     , reserved "const" >> pure S.Const

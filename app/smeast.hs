@@ -15,7 +15,7 @@ import           System.Directory           (doesFileExist)
 import           Text.Show.Pretty           (ppShow)
 
 import           Language.SMEIL.JSON
-import           Language.SMEIL.Parser
+import           Language.SMEIL.Parser      (SrcSpan, parse)
 import           Language.SMEIL.Pretty      (pprr)
 import           Language.SMEIL.Syntax
 
@@ -104,8 +104,8 @@ main = do
         B.readFile inf
   ast <-
     case inputFormat o of
-      PrettyJSON -> raiseEither (readJSON fc :: Either String DesignFile)
-      JSON       -> raiseEither (readJSON fc :: Either String DesignFile)
+      PrettyJSON -> raiseEither (readJSON fc :: Either String (DesignFile SrcSpan))
+      JSON       -> raiseEither (readJSON fc :: Either String (DesignFile SrcSpan))
       Pretty     -> raiseEither $ parse (prettyStdin inf) (unpack fc)
       AST        -> throwIO (userError
                              "Pretty printed AST cannot be used as source format")
