@@ -20,7 +20,7 @@ designUnit :: Parser (S.DesignUnit SrcSpan)
 designUnit = withPos $ S.DesignUnit <$> many importStm <*> some unitElement
 
 unitElement :: Parser (S.UnitElement SrcSpan)
-unitElement = withPos $ choice [ S.UnitProc <$> process
+unitElement = choice [ S.UnitProc <$> process
                      , S.UnitNet <$> network
                      ]
 
@@ -36,7 +36,7 @@ network = withPos $
   braces (some networkDecl)
 
 networkDecl :: Parser (S.NetworkDecl SrcSpan)
-networkDecl = withPos $ choice [ S.NetInst <$> instanceDecl
+networkDecl = choice [S.NetInst <$> instanceDecl
                      , S.NetBus <$> busDecl
                      , S.NetConst <$> constDecl
                      ]

@@ -17,10 +17,8 @@ data DesignUnit a = DesignUnit
   } deriving (Eq, Show)
 
 data UnitElement a
-  = UnitProc { process :: Process a
-            ,  annot   :: a }
-  | UnitNet { network :: Network a
-           ,  annot   :: a }
+  = UnitProc { process :: Process a }
+  | UnitNet { network :: Network a }
   deriving (Eq, Show)
 
 -- | Specifies a module to be imported in current design module
@@ -46,14 +44,11 @@ data Network a = Network
   } deriving (Eq, Show)
 
 data NetworkDecl a
-  = NetInst { inst  :: Instance a
-           ,  annot :: a -- ^ A network instance
+  = NetInst { inst :: Instance a -- ^ A network instance
             }
-  | NetBus { bus   :: Bus a
-          ,  annot :: a -- ^ A network declaration
+  | NetBus { bus :: Bus a -- ^ A network declaration
            }
-  | NetConst { const :: Constant a
-            ,  annot :: a -- ^ A network constant
+  | NetConst { const :: Constant a -- ^ A network constant
              }
   deriving (Eq, Show)
 

@@ -16,8 +16,8 @@ instance Pretty (DesignUnit a) where
   ppr (DesignUnit i es _) = stack (map ppr i) </> stack (map ppr es)
 
 instance Pretty (UnitElement a) where
-  ppr (UnitProc p _) = ppr p
-  ppr (UnitNet n _)  = ppr n
+  ppr (UnitProc p) = ppr p
+  ppr (UnitNet n)  = ppr n
 
 instance Pretty (Import a) where
   ppr (Import s _) = text "import" <+> ppr s <> semi
@@ -33,9 +33,9 @@ instance Pretty (Network a) where
       param (d, e) = ppr d <+> ppr e
 
 instance Pretty (NetworkDecl a) where
-  ppr (NetInst i _)  = ppr i
-  ppr (NetBus b _)   = ppr b
-  ppr (NetConst c _) = ppr c
+  ppr (NetInst i)  = ppr i
+  ppr (NetBus b)   = ppr b
+  ppr (NetConst c) = ppr c
 
 instance Pretty (Bus a) where
   ppr (Bus e n ss _) =
@@ -202,9 +202,6 @@ instance Pretty (Literal a) where
 
 nestL :: Int
 nestL = 4
-
-indent' :: Doc -> Doc
-indent' = nest nestL
 
 hang' :: Doc -> Doc
 hang' = hang nestL
