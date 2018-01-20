@@ -1,31 +1,34 @@
 -- | This module defines the syntax for the SME intermediate
 -- representation. For details, see: TODO/langspec.pdf
 
+{-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module Language.SMEIL.Syntax where
 
+import           Data.Data (Data, Typeable)
+
 data DesignFile a = DesignFile
   { units :: [DesignUnit a]
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data DesignUnit a = DesignUnit
   { imports     :: [Import a] -- ^ Imports of the design unit
   , unitElement :: [UnitElement a] -- ^ A unit-level process or network
   , annot       :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data UnitElement a
   = UnitProc { process :: Process a }
   | UnitNet { network :: Network a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 -- | Specifies a module to be imported in current design module
 data Import a = Import
   { ident :: Name a -- ^ Name of the module to be imported
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 -- | Instantiates either a "Process" or a "Network"
 data Instance a = Instance
@@ -34,7 +37,7 @@ data Instance a = Instance
   , elName    :: Ident -- ^ The name of the object to initialize
   , params    :: [(Maybe Ident, Expr a)] -- ^ Optionally named parameters of the object
   , annot     :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 -- | Describes a parameter used in the specification of "Process" or "Network"
 data Param a = Param
@@ -42,7 +45,7 @@ data Param a = Param
   , dir   :: Direction a
   , name  :: Ident
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 -- | Defines a Network
 data Network a = Network
@@ -50,7 +53,7 @@ data Network a = Network
   , params   :: [Param a]
   , netDecls :: [NetworkDecl a] -- ^ Declarations in network
   , annot    :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data NetworkDecl a
   = NetInst { inst :: Instance a -- ^ A network instance
@@ -61,14 +64,14 @@ data NetworkDecl a
              }
   | NetGen { gen :: Generate a -- ^ Generator statement
            }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Bus a = Bus
   { exposed :: Bool -- ^Bus is exposed on top level
   , name    :: Ident -- ^Name of bus
   , signals :: [BusSignal a] -- ^Bus signals
   , annot   :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data BusSignal a = BusSignal
   { name  :: Ident -- ^Name of signal
@@ -76,13 +79,13 @@ data BusSignal a = BusSignal
   , value :: Maybe (Expr a) -- ^Initial value of signal
   , range :: Maybe (Range a) -- ^Signal range
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Range a = Range
   { lower :: Expr a -- ^Lower bound
   , upper :: Expr a-- ^Upper bound
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Process a = Process
   { name   :: Ident -- ^Name of process
@@ -91,7 +94,7 @@ data Process a = Process
   , body   :: [Statement a]
   , sync   :: Bool
   , annot  :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Generate a = Generate
   { var     :: Ident
@@ -99,14 +102,14 @@ data Generate a = Generate
   , to      :: Expr a
   , genBody :: [NetworkDecl a]
   , annot   :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Declaration a
   = VarDecl (Variable a)
   | ConstDecl (Constant a)
   | BusDecl (Bus a)
   | FuncDecl (Function a)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Variable a = Variable
   { name  :: Ident
@@ -114,21 +117,21 @@ data Variable a = Variable
   , val   :: Maybe (Expr a)
   , range :: Maybe (Range a)
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Constant a = Constant
   { name  :: Ident
   , ty    :: Type a
   , val   :: Expr a
   , annot :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Function a = Function
   { name   :: Ident
   , params :: [Ident]
   , body   :: [Statement a]
   , annot  :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Statement a
   = Assign { dest  :: Name a
@@ -152,19 +155,19 @@ data Statement a
   | Break { annot :: a }
   | Return { retVal :: Maybe (Expr a)
           ,  annot  :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Enumeration a = Enumeration
   { name   :: Ident
   , fields :: [(Ident, Maybe (Expr a))]
   , annot  :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 data Direction a
   = In { annot :: a }
   | Out { annot :: a }
   | Const { annot :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Expr a
   = Binary { binOp :: BinOp a
@@ -177,11 +180,11 @@ data Expr a
   | PrimLit { lit   :: Literal a
             , annot :: a }
   | PrimName { name  :: Name a
-             , annot :: a}
+             , annot :: a }
   | FunCall { name   :: Name a
             , params :: [Expr a]
             , annot  :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data BinOp a
   = PlusOp { annot :: a }
@@ -200,23 +203,23 @@ data BinOp a
   | AndOp { annot :: a }
   | OrOp { annot :: a }
   | XorOp { annot :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data UnOp a
   = UnPlus { annot :: a }
   | UnMinus { annot :: a }
   | NotOp { annot :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Name a
   = Ident { ident :: Ident
-         ,  annot :: a}
+         ,  annot :: a }
   | HierAccess { idents :: [Ident]
               ,  annot  :: a }
   | ArrayAccess { name  :: Name a
                ,  index :: Expr a
                ,  annot :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Type a
   = Signed { size  :: Integer
@@ -229,7 +232,7 @@ data Type a
   | Array { arrLength :: Maybe (Expr a)
           , innerTy   :: Type a
           , annot     :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 data Literal a
   = LitInt { intVal :: Integer
@@ -242,6 +245,6 @@ data Literal a
              , annot    :: a }
   | LitTrue { annot :: a }
   | LitFalse { annot :: a }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
 
 type Ident = String
