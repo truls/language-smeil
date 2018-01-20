@@ -29,16 +29,25 @@ data Import a = Import
 
 -- | Instantiates either a "Process" or a "Network"
 data Instance a = Instance
-  { instName :: Maybe Ident -- ^ The name of the instance
-  , elName   :: Ident -- ^ The name of the object to initialize
-  , params   :: [(Maybe Ident, Expr a)] -- ^ Optionally named parameters of the object
-  , annot    :: a
+  { instName  :: Maybe Ident -- ^ The name of the instance
+  , instIndex :: Maybe (Expr a)
+  , elName    :: Ident -- ^ The name of the object to initialize
+  , params    :: [(Maybe Ident, Expr a)] -- ^ Optionally named parameters of the object
+  , annot     :: a
+  } deriving (Eq, Show)
+
+-- | Describes a parameter used in the specification of "Process" or "Network"
+data Param a = Param
+  { count :: Maybe (Maybe (Expr a))
+  , dir   :: Direction a
+  , name  :: Ident
+  , annot :: a
   } deriving (Eq, Show)
 
 -- | Defines a Network
 data Network a = Network
   { name     :: Ident -- ^ Name of network
-  , params   :: [(Direction a, Ident)]
+  , params   :: [Param a]
   , netDecls :: [NetworkDecl a] -- ^ Declarations in network
   , annot    :: a
   } deriving (Eq, Show)
@@ -50,6 +59,8 @@ data NetworkDecl a
            }
   | NetConst { const :: Constant a -- ^ A network constant
              }
+  | NetGen { gen :: Generate a -- ^ Generator statement
+           }
   deriving (Eq, Show)
 
 data Bus a = Bus
@@ -75,11 +86,19 @@ data Range a = Range
 
 data Process a = Process
   { name   :: Ident -- ^Name of process
-  , params :: [(Direction a, Ident)] -- ^Process parameters
+  , params :: [Param a] -- ^Process parameters
   , decls  :: [Declaration a] -- ^
   , body   :: [Statement a]
   , sync   :: Bool
   , annot  :: a
+  } deriving (Eq, Show)
+
+data Generate a = Generate
+  { var     :: Ident
+  , from    :: Expr a
+  , to      :: Expr a
+  , genBody :: [NetworkDecl a]
+  , annot   :: a
   } deriving (Eq, Show)
 
 data Declaration a

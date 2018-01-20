@@ -167,6 +167,7 @@ the invocations of
   <network-decl> ::= <instance>
   \alt <bus-decl>
   \alt <const-decl>
+  \alt <gen-decl>
 
   %<process> ::= [ `sync' | `async' ] [ `simulation' ] `proc' <ident> \\ `(' [
   <process> ::= [ `sync' | `async' ] `proc' <ident> \\ `(' [
@@ -176,6 +177,13 @@ the invocations of
 \paragraph{JSON}
 \begin{jsoncode}
  {"import": <ident>}
+
+ //  TODO: Check representation of count
+ {"param": { "count": ??<expr>??
+           , "dir": <direction>
+           , "name": <ident>
+           }
+}
 
  {"network": { "name": <ident>
              , "params": [ <param> ]
@@ -187,6 +195,7 @@ the invocations of
 { "net-inst": { "inst": <instance> }
 | "net-bus": { "bus": <bus-decl> }
 | "net-const": { "const": <const-decl> }
+| "net-gen": { "gen": <generate> }
 }
 
  {"process": { "name": <ident>
@@ -204,14 +213,15 @@ the invocations of
 
   <instance> ::= `instance' <instance-name> `of' <ident> \\`(' [ <param-map> { `,' <param-map> } ]`)' `;'
 
-  <instance-name> ::= <ident> (named instance)
+  <instance-name> ::= <ident> `[' <expression> `]' (indexed instance)
+  \alt <ident> (named instance)
   \alt `_' (anonymous instance)
 
   <param-map> ::= [ <ident> `:' ] <expression>
 
   <params> ::= <param> \{ , <param> \}
 
-  <param> ::= <direction> <ident>
+  <param> ::= \{ `[' \{ <expression> \} `]' \} <direction> <ident>
 
   <enum> ::= `enum' <ident> `{' <enum-field> \{ `,' <enum-field>  \} `}' `;'
 
@@ -226,6 +236,8 @@ the invocations of
   <var-decl> ::= `var' <ident> `:' \\ <type-name> [ `=' <expression> ] [ <range> ] `;'
 
   <range> ::= `range' <expression> `to' <expression>
+
+  <gen-decl> ::= `generate' <ident> `=' <expression> `to' <expression> \\ `{' \{ <network-decl> \} `}'
 
   <const-decl> ::= `const' <ident> `:' <type-name> [ `=' <expression> ] `;'
 
@@ -242,6 +254,7 @@ the invocations of
 \paragraph{JSON}
 \begin{jsoncode}
 {"instance": { "inst-name": ?<ident>?
+             , "inst-index": ?<expression>?
              , "el-name": <ident>
              , "params": [ [ ?"ident"?, <expr> ] ]
              }
@@ -295,6 +308,13 @@ the invocations of
                 | "bus-decl": <bus>
                 }
 }
+
+{"generate": { "var": <ident>
+             , "from": <expr>
+             , "to": <expr>
+             , "body": [ <network-decl> ]
+             }
+}
 \end{jsoncode}
 
 \subsection{Statements}
@@ -313,12 +333,11 @@ the invocations of
   \alt `break' `;'
   \alt `return' [ <expr> ] `;'
 
-  <switch-case> ::= `case' <expression> `:' \{ <statement> \}
+  <switch-case> ::= `case' <expression> \{ <statement> \}
 
   <elif-block> ::= `elif `(' <condition> `)' `{' \{ <statement> \} `}'
 
   <else-block> ::= `else' `{' \{ <statement> \} `}'
-
 \end{grammar}
 
 \paragraph{JSON}
@@ -527,6 +546,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   \item exposed
   \item for
   \item func
+  \item generate
   \item if
   \item import
   \item in

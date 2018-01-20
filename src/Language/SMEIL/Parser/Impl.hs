@@ -20,9 +20,7 @@ designUnit :: Parser (S.DesignUnit SrcSpan)
 designUnit = withPos $ S.DesignUnit <$> many importStm <*> some unitElement
 
 unitElement :: Parser (S.UnitElement SrcSpan)
-unitElement = choice [ S.UnitProc <$> process
-                     , S.UnitNet <$> network
-                     ]
+unitElement = choice [S.UnitProc <$> process, S.UnitNet <$> network]
 
 -- Network Structure
 
@@ -30,43 +28,47 @@ importStm :: Parser (S.Import SrcSpan)
 importStm = withPos $ reserved "import" >> S.Import <$> name <* semi
 
 network :: Parser (S.Network SrcSpan)
-network = withPos $
-  reserved "network" >>
-  S.Network <$> ident <*> parens (param `sepBy` comma) <*>
-  braces (some networkDecl)
+network =
+  withPos
+    (reserved "network" >>
+     S.Network <$> ident <*> parens (param `sepBy` comma) <*>
+     braces (some networkDecl))
 
 networkDecl :: Parser (S.NetworkDecl SrcSpan)
 networkDecl = choice [S.NetInst <$> instanceDecl
                      , S.NetBus <$> busDecl
                      , S.NetConst <$> constDecl
+                     , S.NetGen <$> genDecl
                      ]
 
 process :: Parser (S.Process SrcSpan)
-process = withPos $ do
-  sync <- synchrony
-  void $ reserved "proc"
-  S.Process <$> ident <*> parens (param `sepBy` comma) <*> many declaration <*>
-    braces (many statement) <*>
-    pure sync
+process =
+  withPos $ do
+    sync <- synchrony
+    void $ reserved "proc"
+    S.Process <$> ident <*> parens (param `sepBy` comma) <*> many declaration <*>
+      braces (many statement) <*>
+      pure sync
   where
     synchrony =
       reserved "sync" *> pure True <|> reserved "async" *> pure False <|>
       pure False
 
-param :: Parser (S.Direction SrcSpan, S.Ident)
-param = do
-  dir <- direction
-  i <- ident
-  return (dir, i)
+param :: Parser (S.Param SrcSpan)
+param =
+  withPos $
+  S.Param <$> optional (brackets (optional expression)) <*> direction <*> ident
 
 -- Definitions
-
 instanceDecl :: Parser (S.Instance SrcSpan)
-instanceDecl = withPos $
-  reserved "instance" >>
-  S.Instance <$> ((transformIdent <$> ident) <* reserved "of") <*> ident <*>
-  parens (paramMap `sepBy` comma) <*
-  semi
+instanceDecl =
+  withPos
+    (reserved "instance" >>
+     S.Instance <$> (transformIdent <$> ident) <*>
+     (optional (brackets expression) <* reserved "of") <*>
+     ident <*>
+     parens (paramMap `sepBy` comma) <*
+     semi)
   where
     paramMap = (,) <$> optional (try (ident <* colon)) <*> expression
     transformIdent "_" = Nothing
@@ -100,6 +102,15 @@ varDecl =
      optional (symbol "=" *> expression) <*>
      optional range <*
      semi <?> "variable declaration")
+
+genDecl :: Parser (S.Generate SrcSpan)
+genDecl =
+  withPos
+    (reserved "generate" >>
+     S.Generate <$> (ident <* equal) <*> (expression <* reserved "to") <*>
+     expression <*>
+     braces (many networkDecl)) <?>
+  "generate declaration"
 
 range :: Parser (S.Range SrcSpan)
 range =
@@ -253,15 +264,15 @@ prefix n f g =
 
 typeName :: Parser (S.Type SrcSpan)
 typeName =
-  withPos $
-  choice
-    [ char 'i' >> S.Signed <$> integer
-    , char 'u' >> S.Unsigned <$> integer
-    , char 'f' >>
-      ((string "32" >> pure S.Single) <|> (string "64" >> pure S.Double))
-    , string "bool" >> pure S.Bool
-    , S.Array <$> brackets (optional expression) <*> typeName
-    ]
+  withPos
+    (choice
+       [ char 'i' >> S.Signed <$> integer
+       , char 'u' >> S.Unsigned <$> integer
+       , char 'f' >>
+         ((string "32" >> pure S.Single) <|> (string "64" >> pure S.Double))
+       , string "bool" >> pure S.Bool
+       , S.Array <$> brackets (optional expression) <*> typeName
+       ])
 
 -- Utility Functions
 

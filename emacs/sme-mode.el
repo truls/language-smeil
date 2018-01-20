@@ -38,6 +38,7 @@
     "enum"
     "for"
     "func"
+    "generate"
     "if"
     "import"
     "instance"
@@ -83,7 +84,8 @@
 (defconst sme-properties
   `("sync"
     "async"
-    "exposed")
+    "exposed"
+    "len")
   "SME definition modifiers."
   )
 

@@ -114,6 +114,7 @@ reservedWords =
   , "exposed"
   , "for"
   , "func"
+  , "generate"
   , "if"
   , "import"
   , "in"

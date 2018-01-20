@@ -63,6 +63,7 @@ concat <$>
     , ''DesignUnit
     , ''UnitElement
     , ''Import
+    , ''Param
     , ''Instance
     , ''Network
     , ''NetworkDecl
@@ -70,6 +71,7 @@ concat <$>
     , ''BusSignal
     , ''Range
     , ''Process
+    , ''Generate
     , ''Declaration
     , ''Variable
     , ''Constant

@@ -22,20 +22,27 @@ instance Pretty (UnitElement a) where
 instance Pretty (Import a) where
   ppr (Import s _) = text "import" <+> ppr s <> semi
 
+instance Pretty (Param a) where
+  ppr (Param s d e _) =
+    (case s of
+       Just l  -> brackets (ppr l)
+       Nothing -> empty) <>
+    ppr d <+>
+    ppr e
+
 instance Pretty (Network a) where
   ppr (Network i ps is _) =
       text "network" <+>
        ppr i <+>
-       parens (commasep $ map param ps) </>
+       parens (commasep $ map ppr ps) </>
        hang' (lbrace </> stack (map ppr is)) </>
     rbrace
-    where
-      param (d, e) = ppr d <+> ppr e
 
 instance Pretty (NetworkDecl a) where
   ppr (NetInst i)  = ppr i
   ppr (NetBus b)   = ppr b
   ppr (NetConst c) = ppr c
+  ppr (NetGen g)   = ppr g
 
 instance Pretty (Bus a) where
   ppr (Bus e n ss _) =
@@ -55,12 +62,19 @@ instance Pretty (Process a) where
     hang'
       (ppIf c (text "sync") <+>
        text "proc" <+>
-       ppr n <+> parens (commasep (map param ps)) </> stack (map ppr ds)) </>
+       ppr n <+> parens (commasep (map ppr ps)) </> stack (map ppr ds)) </>
     hang' (lbrace </> stack (map ppr bs)) </>
     rbrace <>
     line
-    where
-      param (d, i) = ppr d <+> ppr i
+
+instance Pretty (Generate a) where
+  ppr (Generate v f t gs _) =
+    hang'
+    (ppr "generate" <+>
+      ppr v <+>
+      text "=" <+>
+      ppr f <+> text "to" <+> ppr t <+> lbrace </> stack (map ppr gs)) </>
+    rbrace
 
 instance Pretty (Declaration a) where
   ppr (VarDecl v)   = ppr v
@@ -146,15 +160,17 @@ instance Pretty (Expr a) where
   ppr (FunCall n ps _)    = ppr n <> parens (commasep (map ppr ps))
 
 instance Pretty (Instance a) where
-  ppr (Instance i e ps _) =
+  ppr (Instance n i e ps _) =
     text "instance" <+>
-    ppr (toInstName i) <+>
-    text "of" <+> ppr e <+> parens (commasep $ map param ps) <> semi
+    ppr (toInstName n) <> toInstIndex i <>
+    text "of" <+> ppr e <> parens (commasep $ map param ps) <> semi
     where
       param (Nothing, ee) = ppr ee
-      param (Just n, ee)  = ppr n <> colon <+> ppr ee
+      param (Just n', ee) = ppr n' <> colon <+> ppr ee
       toInstName (Just a) = a
       toInstName Nothing  = "_"
+      toInstIndex (Just i') = brackets (ppr i') <> space
+      toInstIndex Nothing   = space
 
 instance Pretty (BinOp a) where
   ppr (PlusOp _)  = text "+"
