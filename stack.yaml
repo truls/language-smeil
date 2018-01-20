@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-10.0
+resolver: lts-10.3
 
 # For using intero with ghc-8.2.2
 allow-newer: true
