@@ -41,16 +41,16 @@ data Instance a = Instance
 
 -- | Describes a parameter used in the specification of "Process" or "Network"
 data Param a = Param
-  { count :: Maybe (Maybe (Expr a))
-  , dir   :: Direction a
-  , name  :: Ident
+  { count :: Maybe (Maybe (Expr a)) -- ^ Length of array of params
+  , dir   :: Direction a -- ^ Parameter direction
+  , name  :: Ident -- ^ Parameter name
   , annot :: a
   } deriving (Eq, Show, Data, Typeable)
 
 -- | Defines a Network
 data Network a = Network
   { name     :: Ident -- ^ Name of network
-  , params   :: [Param a]
+  , params   :: [Param a] -- ^ Network parameters
   , netDecls :: [NetworkDecl a] -- ^ Declarations in network
   , annot    :: a
   } deriving (Eq, Show, Data, Typeable)
@@ -90,12 +90,13 @@ data Range a = Range
 data Process a = Process
   { name   :: Ident -- ^Name of process
   , params :: [Param a] -- ^Process parameters
-  , decls  :: [Declaration a] -- ^
-  , body   :: [Statement a]
-  , sync   :: Bool
+  , decls  :: [Declaration a] -- ^Process declarations
+  , body   :: [Statement a] -- ^Process body
+  , sync   :: Bool -- ^Process is synchronous
   , annot  :: a
   } deriving (Eq, Show, Data, Typeable)
 
+-- | Generator expression for use in Processes
 data Generate a = Generate
   { var     :: Ident
   , from    :: Expr a
