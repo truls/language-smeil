@@ -139,6 +139,7 @@ declaration =
     , S.ConstDecl <$> constDecl
     , S.BusDecl <$> busDecl
     , S.FuncDecl <$> function
+    , S.EnumDecl <$> enum
     ] <?>
   "declaration"
 

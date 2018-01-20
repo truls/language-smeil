@@ -110,6 +110,7 @@ data Declaration a
   | ConstDecl (Constant a)
   | BusDecl (Bus a)
   | FuncDecl (Function a)
+  | EnumDecl (Enumeration a)
   deriving (Eq, Show, Data, Typeable)
 
 data Variable a = Variable

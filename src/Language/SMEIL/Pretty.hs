@@ -81,6 +81,7 @@ instance Pretty (Declaration a) where
   ppr (ConstDecl c) = ppr c
   ppr (BusDecl b)   = ppr b
   ppr (FuncDecl f)  = ppr f
+  ppr (EnumDecl e)  = ppr e
 
 instance Pretty (Variable a) where
   ppr (Variable n t v r _) =
