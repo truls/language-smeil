@@ -1,19 +1,76 @@
 // foo
 
+sync proc calc (in data, const decay)
+   bus my {
+       prev: i32 = 0;
+   };
+   exposed bus result {
+       val: i32;
+       valid: bool;
+   };
+   const sub: i32 = 1;
+
+   func calc(next: i32, prev: i32) : i32
+        var part1: i32;
+        var part2: i32;
+        var part3: i32;
+   {
+        part1 = next >> decay;
+        part2 = prev >> decay;
+        part3 = (1 << d) - 1;
+        return part1 + part2 * part3;
+  };
+
+{
+    if (data.valid) {
+        result.valid = true;
+        //my.prev = (data.val >> decay) + (my.prev >> decay) * ((1 << d) - 1);
+        my.prev = calc(data.val, my.prev);
+        result.val = my.prev;
+     } elif (!data.valid) {
+         result.val = my.prev;
+     } else {
+       result.valid = false;
+     }
+}
+
+sync proc merge (in long, in short, out res) {
+     if (long.valid & short.valid) {
+        res.valid = true;
+        res.long = long.val;
+        res.short = short.val;
+     } else {
+       res.valid = false;
+     }
+}
 
 network ewma (in stream, out result) {
-        const alpha: f32 = 0.1;
+        const decays: [43 ][4]i2 = [2, 3];
 
-        bus bus1 {
-            val: i32;
+        //const decay1: i32 = 2;
+        //const decay2: i32 = 3;
+
+        exposed bus stream {
+            val: i43;
             valid: bool;
         };
-        bus bus2 {
-            val: i32;
-            valid: bool;
-        }
 
-        instance l of logger (input: bus2);
-        instance s of source (output: bus2);
-        instance c of calc (input: bus1, output: bus2, alpha: alpha);
+        exposed bus output {
+         short: i32;
+         long: i32;
+         valid: bool;
+        };
+
+        // instance short of calc (data: stream, alpha: decay1);
+        // instance long of calc (data: stream, alpha: decay2);
+        instance short of calc (data: stream, decay: decays[0]);
+        instance long of calc (data: stream, decay: decays[1]);
+        instance _ of merge (long: long.result, short: short.result, res: output);
+
+        // Alternative to merge process:
+        // external bus output {
+        //   short: i32 <= short.val;
+        //   long:  i32 <= long.val;
+        //   valid: bool <= sort.valid & long.valid;
+        // }
 }

@@ -1,0 +1,28 @@
+// Simple network adding a parameterized number plus a fixed number taken from a
+// parameterized input bus to a accumulator variable
+
+sync proc num(const val)
+   bus value {
+      val: i32;
+   };
+{
+   value.val = val;
+}
+
+sync proc addN(in val1, in val2, const n)
+   const c: u7 = 4;
+   var accum: u14 = 0;
+   exposed bus result {
+     val: u14;
+   };
+{
+   accum = accu + n + c + val1.val + val2.val;
+   result.val = accum;
+}
+
+network addN_net()
+{
+   instance n1 of num(val: 10);
+   instance n2 of num(val: 20);
+   instance _  of addN(val1: n1.value, val2: n2.value, n: 5);
+}

@@ -13,8 +13,12 @@ sync proc producer (const num1, const num2)
 
 sync proc op (in inp, const operator)
   enum operators {
-    ADD, DIV, MUL, SUB
+    ADD = 0, DIV, MUL, SUB
   };
+  // As an alternative to declaring the operators enum in the op process, we
+  // could have declared it in the all_ops network. This would require us to
+  // change the references to enum values below from, for example. ADD to
+  // all_ops.ADD.
 
   bus outp {
     val: i32;
@@ -52,10 +56,12 @@ network all_ops (out result) {
        agg: i32;
     };
 
-        instance prod of producer (num1: 4, num2: 9);
-        // instance prod2 of producer (num1: 10, num2: 5);
-        for i = 0 to len(op.operators) {
-           instance opproc[i] of op(operator: i, inp: prod.valbus);
-        }
-        instance s of sink (results: opproc[*].outp, out result);
+    instance prod of producer (num1: 4, num2: 9);
+    // instance prod2 of producer (num1: 10, num2: 5);
+    generate i = 0 to len(op.operators) {
+       instance opproc[i] of op(operator: i, inp: prod.valbus);
+    }
+    // The [*] notations is semantically similar to globbing and is in this case
+    // equivalent to (results[0]: opproc[0].outp, results
+    instance s of sink (results: opproc[*].outp, result: result);
 }

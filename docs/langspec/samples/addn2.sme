@@ -1,0 +1,21 @@
+sync proc num(const val)
+   bus value {
+      val: i32;
+   };
+{
+   value.val = val;
+}
+
+sync proc addN(const n)
+   exposed bus result {
+     value: u14;
+   };
+{
+   accum = accu + n + c + num.value.val;
+   result.value = accum;
+}
+
+network addN_net()
+{
+   instance _  of addN(n: 5);
+}

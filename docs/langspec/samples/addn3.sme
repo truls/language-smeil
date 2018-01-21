@@ -1,0 +1,38 @@
+sync proc num(const val)
+   bus value {
+      val: i32;
+   };
+{
+   value.val = vall;
+}
+
+sync proc addN([]in val, const n)
+   const c: u7 = 4;
+   var accum: u14 = 0;
+   var vals: u14 = 0;
+
+   exposed bus result {
+     val: u14;
+   };
+{
+   vals = 0;
+   for i = 0 to len(val) {
+      vals = vals + val[i];
+   }
+   accum = accum + n + c + vals;
+   result.val = accum;
+}
+
+network addN_net()
+{
+   const procs: i32 = 10;
+   const vs: [procs]i32 = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+   generate i = 0 to procs/2 {
+     instance n1[i] of num(val: vs[i]);
+   }
+   generate i = procs/2 to procs {
+     instance n1[i] of num(val: vs[i]/2);
+   }
+
+   instance _  of addN(val: n1, n: 5);
+}
