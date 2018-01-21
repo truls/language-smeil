@@ -131,7 +131,9 @@ data Constant a = Constant
 
 data Function a = Function
   { name   :: Ident
-  , params :: [Ident]
+  , params :: [(Ident, Type a)]
+  , retTy  :: Type a
+  , decls  :: [Declaration a]
   , body   :: [Statement a]
   , annot  :: a
   } deriving (Eq, Show, Data, Typeable)

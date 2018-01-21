@@ -241,7 +241,10 @@ the invocations of
 
   <const-decl> ::= `const' <ident> `:' <type-name> [ `=' <expression> ] `;'
 
-  <function> ::= `func' <ident> `{' { <statement> } `}'
+  <function> ::= `func' <ident> `(' \{ <function-param> \} `)' `:' <type-name>
+  \{ <declaration> \} `{' { <statement> } `}' `;'
+
+  <function-param> ::= <ident> `:' <type-name>
 
   <declaration> ::= <var-decl>
   \alt <const-decl>

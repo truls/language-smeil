@@ -135,7 +135,13 @@ function :: Parser (S.Function SrcSpan)
 function =
   withPos
     (reserved "func" >>
-     S.Function <$> ident <*> many ident <*> many statement <?> "function")
+     S.Function <$> ident <*> parens (funcParam `sepBy` comma) <*>
+     (colon *> typeName) <*>
+     many declaration <*>
+     braces (many statement) <*
+     semi <?> "function")
+  where
+    funcParam = (,) <$> (ident <* colon) <*> typeName
 
 declaration :: Parser (S.Declaration SrcSpan)
 declaration =

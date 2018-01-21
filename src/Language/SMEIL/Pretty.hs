@@ -96,11 +96,15 @@ instance Pretty (Constant a) where
     text "const" <+> ppr n <> colon <+> ppr t <+> equals <+> ppr v <> semi
 
 instance Pretty (Function a) where
-  ppr (Function n ps bs _) =
+  ppr (Function n ps r ds bs _) =
     hang'
       (text "func" <+>
-       ppr n <> parens (commasep $ map ppr ps) <+> lbrace </> stack (map ppr bs)) </>
-    rbrace
+       ppr n <> parens (commasep $ map funcArg ps) <+>
+       colon <+> ppr r </> stack (map ppr ds)) </>
+    hang' (lbrace </> stack (map ppr bs)) </>
+    rbrace <> semi
+    where
+      funcArg (a, t) = ppr a <> colon <+> ppr t
 
 instance Pretty (Statement a) where
   ppr (Assign i v _) = ppr i <+> text "=" <+> ppr v <> semi
