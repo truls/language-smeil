@@ -129,6 +129,7 @@ reservedWords =
   , "switch"
   , "sync"
   , "to"
+  , "unique"
   , "var"
   , "where"
   ]

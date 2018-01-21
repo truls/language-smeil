@@ -227,7 +227,7 @@ the invocations of
 
   <enum-field> ::= <ident> [ `=' <expr> ]
 
-  <bus-decl> ::= [ `exposed' ] `bus' <ident> `\{' <bus-signal-decls> `\}'  `;'
+  <bus-decl> ::= [ `exposed' ] [ `unique' ] `bus' <ident> `\{' <bus-signal-decls> `\}'  `;'
 
   <bus-signal-decls> ::= <bus-signal-decl> \{ [ `,' <bus-signal-decl> ] \}
 
@@ -564,6 +564,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   \item switch
   \item sync
   \item to
+  \item unique
   \item var
   \item where
   \end{itemize}

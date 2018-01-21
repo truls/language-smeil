@@ -6,6 +6,7 @@ import           Data.Maybe                  (isJust)
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import           Text.Megaparsec.Expr
+import           Text.Megaparsec.Perm
 
 import           Language.SMEIL.Parser.Lexer
 import           Language.SMEIL.Parser.Monad
@@ -84,7 +85,7 @@ enum = withPos $
 busDecl :: Parser (S.Bus SrcSpan)
 busDecl =
   withPos
-    (S.Bus <$> parses (reserved "exposed") <*> (reserved "bus" *> ident) <*>
+    (busProps <*> (reserved "bus" *> ident) <*>
      braces (some (withPos signalDecl)) <*
      semi <?> "bus declaration")
   where
@@ -93,6 +94,10 @@ busDecl =
       optional (symbol "=" *> expression) <*>
       optional range <*
       semi <?> "bus signal declaration"
+    busProps =
+      makePermParser $
+      S.Bus <$?> (False, reserved "exposed" *> pure True) <|?>
+      (False, reserved "unique" *> pure True)
 
 varDecl :: Parser (S.Variable SrcSpan)
 varDecl =

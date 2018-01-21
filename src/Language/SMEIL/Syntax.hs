@@ -68,6 +68,7 @@ data NetworkDecl a
 
 data Bus a = Bus
   { exposed :: Bool -- ^Bus is exposed on top level
+  , unique  :: Bool -- ^Bus is unique, i.e., not duplicated on process instantiation
   , name    :: Ident -- ^Name of bus
   , signals :: [BusSignal a] -- ^Bus signals
   , annot   :: a

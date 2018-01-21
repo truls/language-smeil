@@ -45,8 +45,9 @@ instance Pretty (NetworkDecl a) where
   ppr (NetGen g)   = ppr g
 
 instance Pretty (Bus a) where
-  ppr (Bus e n ss _) =
+  ppr (Bus e u n ss _) =
     ppIf e (text "exposed") <+>
+    ppIf u (text "unique") <+>
     text "bus" <+>
     ppr n <+> braces (stack $ map (\s -> ppr s <> semi) ss) <> semi
 
@@ -146,7 +147,7 @@ instance Pretty (Enumeration a) where
     hang' (text "enum" <+> ppr n <+> lbrace </> commasep (map field fs)) </> rbrace
     where
       field :: (Ident, Maybe (Expr a)) -> Doc
-      field (i, e) = ppr i <+> ppr (catL (text "=") e)
+      field (i, e) = ppr i <+> ppr (catL (text "=" <> space) e)
 
 instance Pretty (Direction a) where
   ppr (In _)    = text "in"
