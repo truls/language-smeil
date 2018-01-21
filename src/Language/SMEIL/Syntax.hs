@@ -215,12 +215,17 @@ data UnOp a
 
 data Name a
   = Ident { ident :: Ident
-         ,  annot :: a }
-  | HierAccess { idents :: [Ident]
-              ,  annot  :: a }
+         ,  annot :: a}
+  | HierAccess { idents :: [Name a]
+              ,  annot  :: a}
   | ArrayAccess { name  :: Name a
-               ,  index :: Expr a
-               ,  annot :: a }
+               ,  index :: ArrayIndex a
+               ,  annot :: a}
+  deriving (Eq, Show, Data, Typeable)
+
+data ArrayIndex a
+  = Wildcard
+  | Index (Expr a)
   deriving (Eq, Show, Data, Typeable)
 
 data Type a

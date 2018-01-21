@@ -201,6 +201,10 @@ instance Pretty (Name a) where
   ppr (HierAccess is _)   = cat $ punctuate dot (map ppr is)
   ppr (ArrayAccess n e _) = ppr n <> brackets (ppr e)
 
+instance Pretty (ArrayIndex a) where
+  ppr Wildcard  = text "*"
+  ppr (Index i) = ppr i
+
 instance Pretty (Type a) where
   ppr (Signed s _)   = text "i" <> ppr s
   ppr (Unsigned s _) = text "u" <> ppr s

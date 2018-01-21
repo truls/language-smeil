@@ -1,5 +1,6 @@
 module Language.SMEIL.Parser
   ( parse
+  , parserTest
   , SrcSpan
   ) where
 
@@ -17,3 +18,10 @@ parse f c =
   case P.runParser (runStateT designFile (P.initialPos f)) f c of
     Left err     -> Left $ P.parseErrorPretty err
     Right (r, _) -> Right r
+
+parserTest :: Parser (a SrcSpan) -> String  -> Either String (a SrcSpan)
+parserTest p c =
+  let f = "(test)"
+  in case P.runParser (runStateT p (P.initialPos f)) f c of
+       Left err     -> Left $ P.parseErrorPretty err
+       Right (r, _) -> Right r

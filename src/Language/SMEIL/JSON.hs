@@ -83,6 +83,7 @@ concat <$>
     , ''BinOp
     , ''UnOp
     , ''Name
+    , ''ArrayIndex
     , ''Type
     , ''Literal
     , ''SrcSpan

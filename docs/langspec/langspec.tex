@@ -488,8 +488,11 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
 
   % TODO: Make more specific
   <name> ::= <ident>
-  \alt <name> `.' <ident> (hierarchical accessor)
-  \alt <name> `[' <expression> `]' (array element access)
+  \alt <name> `.' <name> (hierarchical accessor)
+  \alt <name> `[' <array-index> `]' (array element access)
+
+  <array-index> :: `*' (wildcard)
+  \alt <expression> (element index)
 
   <integer> ::= <number> { <number> } (decimal number)
   \alt `0x' <hex-digit> { <hex-digit> } (hexadecimal number)
