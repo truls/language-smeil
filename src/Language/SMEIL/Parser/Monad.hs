@@ -1,3 +1,7 @@
+-- | Contains the parser monad definition and related operations
+
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Language.SMEIL.Parser.Monad
   ( Parser
   , SrcSpan(..)
@@ -8,6 +12,7 @@ module Language.SMEIL.Parser.Monad
   ) where
 
 import           Control.Monad.State.Lazy
+import           Data.Data
 import           Data.Void
 import           Text.Megaparsec
 
@@ -16,7 +21,7 @@ type Parser = StateT SourcePos (Parsec Void String)
 data SrcSpan = SrcSpan
   { start :: SourcePos
   , end   :: SourcePos
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Data, Typeable)
 
 withPos :: Parser (SrcSpan -> a) -> Parser a
 withPos p = do
