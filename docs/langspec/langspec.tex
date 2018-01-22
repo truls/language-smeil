@@ -160,7 +160,13 @@ the invocations of
 \subsubsection{Elements}
 \paragraph{BNF}
 \begin{grammar}
-  <import> ::= `import' <name> `;'
+  <import> ::= `import' <import-name> <qualified-specifier> `;'
+  \alt `from' <import-name> \\ `import' <ident> \{ `,' <ident> \} <qualified-specifier>
+  `;'
+
+  <import-name> ::= <ident> \{ `.' <ident> \}
+
+  <qualified-specifier> ::= \{ `as' <ident> \}
 
   <network> ::= `network' <ident> `(' [ <params> ] `)' `{' <network-decl> `}'
 
@@ -539,6 +545,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
 \subsection{Keywords}
 \begin{multicols}{3}
   \begin{itemize}
+  \item as
   \item async
   \item barrier
   \item break
@@ -551,6 +558,7 @@ The operator precedence of SMEIL is listed \Cref{tab:ops}
   \item enum
   \item exposed
   \item for
+  \item from
   \item func
   \item generate
   \item if

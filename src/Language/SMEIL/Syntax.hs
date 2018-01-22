@@ -25,10 +25,15 @@ data UnitElement a
   deriving (Eq, Show, Data, Typeable)
 
 -- | Specifies a module to be imported in current design module
-data Import a = Import
-  { ident :: Name a -- ^ Name of the module to be imported
-  , annot :: a
-  } deriving (Eq, Show, Data, Typeable)
+data Import a
+  = SimpleImport { modName   :: [Ident] -- ^ Name of the module to be imported
+                ,  qualified :: Maybe Ident -- ^ Optional qualified name of import
+                ,  annot     :: a}
+  | SpecificImport { modName   :: [Ident] -- ^ Name of module to be imported
+                  ,  entities  :: [Ident] -- ^ Entities from module to be imported
+                  ,  qualified :: Maybe Ident -- ^ Optional qualified name of import
+                  ,  annot     :: a}
+  deriving (Eq, Show, Data, Typeable)
 
 -- | Instantiates either a "Process" or a "Network"
 data Instance a = Instance

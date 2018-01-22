@@ -101,7 +101,8 @@ direction =
 
 reservedWords :: [String]
 reservedWords =
-  [ "async"
+  [ "as"
+  , "async"
   , "barrier"
   , "break"
   , "bus"
@@ -113,6 +114,7 @@ reservedWords =
   , "enum"
   , "exposed"
   , "for"
+  , "from"
   , "func"
   , "generate"
   , "if"

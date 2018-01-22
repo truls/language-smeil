@@ -26,7 +26,19 @@ unitElement = choice [S.UnitProc <$> process, S.UnitNet <$> network]
 -- Network Structure
 
 importStm :: Parser (S.Import SrcSpan)
-importStm = withPos $ reserved "import" >> S.Import <$> name <* semi
+importStm =
+  withPos
+    (choice
+       [ reserved "import" >> S.SimpleImport <$> modName <*> qualified <* semi
+       , reserved "from" >>
+         S.SpecificImport <$> (modName <* reserved "import") <*>
+         (ident `sepBy1` comma) <*>
+         qualified <*
+         semi
+       ])
+  where
+    modName = ident `sepBy1` dot
+    qualified = optional (reserved "as" *> ident)
 
 network :: Parser (S.Network SrcSpan)
 network =

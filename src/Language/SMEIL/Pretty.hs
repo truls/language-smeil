@@ -20,7 +20,13 @@ instance Pretty (UnitElement a) where
   ppr (UnitNet n)  = ppr n
 
 instance Pretty (Import a) where
-  ppr (Import s _) = text "import" <+> ppr s <> semi
+  ppr (SimpleImport n q _) =
+    text "import" <+>
+    cat (punctuate dot (map ppr n)) <> ppr (catL (text " as ") q) <> semi
+  ppr (SpecificImport n e q _) =
+    text "from" <+>
+    cat (punctuate dot (map ppr n)) <+>
+    text "import" <+> commasep (map ppr e) <> ppr (catL (text " as ") q) <> semi
 
 instance Pretty (Param a) where
   ppr (Param s d e _) =

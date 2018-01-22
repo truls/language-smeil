@@ -28,7 +28,8 @@
   "Hook for `sme-mode` that is run whenever the mode is entered.")
 
 (defconst sme-keywords
-  '("barrier"
+  '("as"
+    "barrier"
     "break"
     "bus"
     "case"
@@ -37,6 +38,7 @@
     "else"
     "enum"
     "for"
+    "from"
     "func"
     "generate"
     "if"
