@@ -4,7 +4,36 @@
 {-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Language.SMEIL.Syntax where
+module Language.SMEIL.Syntax
+  ( DesignFile(..)
+  , DesignUnit(..)
+  , UnitElement(..)
+  , Import(..)
+  , Instance(..)
+  , Param(..)
+  , Network(..)
+  , NetworkDecl(..)
+  , Bus(..)
+  , BusSignal(..)
+  , Range(..)
+  , Process(..)
+  , Generate(..)
+  , Declaration(..)
+  , Variable(..)
+  , Constant(..)
+  , Function(..)
+  , Statement(..)
+  , Enumeration(..)
+  , Direction(..)
+  , Expr(..)
+  , BinOp(..)
+  , UnOp(..)
+  , Name(..)
+  , ArrayIndex(..)
+  , Type(..)
+  , Literal(..)
+  , Ident
+  ) where
 
 import           Data.Data (Data, Typeable)
 
