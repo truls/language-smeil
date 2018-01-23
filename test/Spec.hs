@@ -37,7 +37,7 @@ main = hspec $
     --    p literal "\"foobar\"" `shouldParse` S.LitString "foobar" mkSrcSpan
     --    p literal "\"foo\\\"bar\"" `shouldParse` S.LitString "foo\"bar" mkSrcSpan
     it "parses identifiers" $ do
-       p ident "_" `shouldParse` "_"
+       -- p ident "_" `shouldParse` (S.Ident "_" mkSrc
        p ident `shouldSucceedOn` "foo"
        p ident `shouldSucceedOn` "foo_bar"
        p ident  `shouldFailOn` "_bar"
