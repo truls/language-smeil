@@ -84,8 +84,8 @@ instanceDecl =
      semi)
   where
     paramMap = (,) <$> optional (try (ident <* colon)) <*> expression
-    transformIdent "_" = Nothing
-    transformIdent i   = Just i
+    transformIdent (S.Ident "_" _) = Nothing
+    transformIdent i@S.Ident {}    = Just i
 
 enum :: Parser (S.Enumeration SrcSpan)
 enum = withPos $
@@ -213,7 +213,7 @@ name = namePart >>= rest <?> "name"
         , pure context
         ]
     namePart = do
-      ident' <- withPos (S.Ident <$> ident)
+      ident' <- withPos (S.IdentName <$> ident)
       choice
         [makePos $ S.ArrayAccess ident' <$> brackets arrayIndex, pure ident']
 

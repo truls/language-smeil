@@ -156,7 +156,7 @@ instance Pretty (Enumeration a) where
   ppr (Enumeration n fs _) =
     hang' (text "enum" <+> ppr n <+> lbrace </> commasep (map field fs)) </> rbrace
     where
-      field :: (Ident, Maybe (Expr a)) -> Doc
+      field :: (Ident a, Maybe (Expr a)) -> Doc
       field (i, e) = ppr i <+> ppr (catL (text "=" <> space) e)
 
 instance Pretty (Direction a) where
@@ -174,13 +174,13 @@ instance Pretty (Expr a) where
 instance Pretty (Instance a) where
   ppr (Instance n i e ps _) =
     text "instance" <+>
-    ppr (toInstName n) <> toInstIndex i <>
-    text "of" <+> ppr e <> parens (commasep $ map param ps) <> semi
+    toInstName n <> toInstIndex i <> text "of" <+>
+    ppr e <> parens (commasep $ map param ps) <> semi
     where
       param (Nothing, ee) = ppr ee
       param (Just n', ee) = ppr n' <> colon <+> ppr ee
-      toInstName (Just a) = a
-      toInstName Nothing  = "_"
+      toInstName (Just a) = ppr a
+      toInstName Nothing  = ppr "_"
       toInstIndex (Just i') = brackets (ppr i') <> space
       toInstIndex Nothing   = space
 
@@ -208,7 +208,7 @@ instance Pretty (UnOp a) where
   ppr (NotOp _)   = text "!"
 
 instance Pretty (Name a) where
-  ppr (Ident i _)         = ppr i
+  ppr (IdentName i _)     = ppr i
   ppr (HierAccess is _)   = cat $ punctuate dot (map ppr is)
   ppr (ArrayAccess n e _) = ppr n <> brackets (ppr e)
 
@@ -231,6 +231,9 @@ instance Pretty (Literal a) where
   ppr (LitArray es _) = brackets (commasep (map ppr es))
   ppr (LitTrue _)     = text "true"
   ppr (LitFalse _)    = text "false"
+
+instance Pretty (Ident a) where
+  ppr (Ident s _) = text s
 
 nestL :: Int
 nestL = 4

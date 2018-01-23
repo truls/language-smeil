@@ -89,4 +89,5 @@ concat <$>
     , ''SrcSpan
     , ''SourcePos
     , ''Pos
+    , ''Ident
     ]

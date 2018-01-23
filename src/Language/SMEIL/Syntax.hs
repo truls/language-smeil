@@ -32,7 +32,7 @@ module Language.SMEIL.Syntax
   , ArrayIndex(..)
   , Type(..)
   , Literal(..)
-  , Ident
+  , Ident(..)
   ) where
 
 import           Data.Data (Data, Typeable)
@@ -55,21 +55,21 @@ data UnitElement a
 
 -- | Specifies a module to be imported in current design module
 data Import a
-  = SimpleImport { modName   :: [Ident] -- ^ Name of the module to be imported
-                ,  qualified :: Maybe Ident -- ^ Optional qualified name of import
+  = SimpleImport { modName   :: [Ident a] -- ^ Name of the module to be imported
+                ,  qualified :: Maybe (Ident a) -- ^ Optional qualified name of import
                 ,  annot     :: a}
-  | SpecificImport { modName   :: [Ident] -- ^ Name of module to be imported
-                  ,  entities  :: [Ident] -- ^ Entities from module to be imported
-                  ,  qualified :: Maybe Ident -- ^ Optional qualified name of import
+  | SpecificImport { modName   :: [Ident a] -- ^ Name of module to be imported
+                  ,  entities  :: [Ident a] -- ^ Entities from module to be imported
+                  ,  qualified :: Maybe (Ident a) -- ^ Optional qualified name of import
                   ,  annot     :: a}
   deriving (Eq, Show, Data, Typeable)
 
 -- | Instantiates either a "Process" or a "Network"
 data Instance a = Instance
-  { instName  :: Maybe Ident -- ^ The name of the instance
+  { instName  :: Maybe (Ident a) -- ^ The name of the instance
   , instIndex :: Maybe (Expr a)
-  , elName    :: Ident -- ^ The name of the object to initialize
-  , params    :: [(Maybe Ident, Expr a)] -- ^ Optionally named parameters of the object
+  , elName    :: Ident a -- ^ The name of the object to initialize
+  , params    :: [(Maybe (Ident a), Expr a)] -- ^ Optionally named parameters of the object
   , annot     :: a
   } deriving (Eq, Show, Data, Typeable)
 
@@ -77,13 +77,13 @@ data Instance a = Instance
 data Param a = Param
   { count :: Maybe (Maybe (Expr a)) -- ^ Length of array of params
   , dir   :: Direction a -- ^ Parameter direction
-  , name  :: Ident -- ^ Parameter name
+  , name  :: Ident a -- ^ Parameter name
   , annot :: a
   } deriving (Eq, Show, Data, Typeable)
 
 -- | Defines a Network
 data Network a = Network
-  { name     :: Ident -- ^ Name of network
+  { name     :: Ident a -- ^ Name of network
   , params   :: [Param a] -- ^ Network parameters
   , netDecls :: [NetworkDecl a] -- ^ Declarations in network
   , annot    :: a
@@ -103,13 +103,13 @@ data NetworkDecl a
 data Bus a = Bus
   { exposed :: Bool -- ^Bus is exposed on top level
   , unique  :: Bool -- ^Bus is unique, i.e., not duplicated on process instantiation
-  , name    :: Ident -- ^Name of bus
+  , name    :: Ident a -- ^Name of bus
   , signals :: [BusSignal a] -- ^Bus signals
   , annot   :: a
   } deriving (Eq, Show, Data, Typeable)
 
 data BusSignal a = BusSignal
-  { name  :: Ident -- ^Name of signal
+  { name  :: Ident a -- ^Name of signal
   , ty    :: Type a -- ^Type of signal
   , value :: Maybe (Expr a) -- ^Initial value of signal
   , range :: Maybe (Range a) -- ^Signal range
@@ -123,7 +123,7 @@ data Range a = Range
   } deriving (Eq, Show, Data, Typeable)
 
 data Process a = Process
-  { name   :: Ident -- ^Name of process
+  { name   :: Ident a -- ^Name of process
   , params :: [Param a] -- ^Process parameters
   , decls  :: [Declaration a] -- ^Process declarations
   , body   :: [Statement a] -- ^Process body
@@ -133,7 +133,7 @@ data Process a = Process
 
 -- | Generator expression for use in Processes
 data Generate a = Generate
-  { var     :: Ident
+  { var     :: Ident a
   , from    :: Expr a
   , to      :: Expr a
   , genBody :: [NetworkDecl a]
@@ -149,7 +149,7 @@ data Declaration a
   deriving (Eq, Show, Data, Typeable)
 
 data Variable a = Variable
-  { name  :: Ident
+  { name  :: Ident a
   , ty    :: Type a
   , val   :: Maybe (Expr a)
   , range :: Maybe (Range a)
@@ -157,15 +157,15 @@ data Variable a = Variable
   } deriving (Eq, Show, Data, Typeable)
 
 data Constant a = Constant
-  { name  :: Ident
+  { name  :: Ident a
   , ty    :: Type a
   , val   :: Expr a
   , annot :: a
   } deriving (Eq, Show, Data, Typeable)
 
 data Function a = Function
-  { name   :: Ident
-  , params :: [(Ident, Type a)]
+  { name   :: Ident a
+  , params :: [(Ident a, Type a)]
   , retTy  :: Type a
   , decls  :: [Declaration a]
   , body   :: [Statement a]
@@ -175,30 +175,30 @@ data Function a = Function
 data Statement a
   = Assign { dest  :: Name a
           ,  val   :: Expr a
-          ,  annot :: a }
+          ,  annot :: a}
   | If { cond  :: Expr a
       ,  body  :: [Statement a]
       ,  elif  :: [(Expr a, [Statement a])]
       ,  els   :: Maybe [Statement a]
-      ,  annot :: a }
-  | For { var   :: Ident
+      ,  annot :: a}
+  | For { var   :: Ident a
        ,  from  :: Expr a
        ,  to    :: Expr a
        ,  body  :: [Statement a]
-       ,  annot :: a }
+       ,  annot :: a}
   | Switch { value       :: Expr a
           ,  cases       :: [(Expr a, [Statement a])]
           ,  defaultCase :: Maybe [Statement a]
-          ,  annot       :: a }
-  | Barrier { annot :: a }
-  | Break { annot :: a }
+          ,  annot       :: a}
+  | Barrier { annot :: a}
+  | Break { annot :: a}
   | Return { retVal :: Maybe (Expr a)
-          ,  annot  :: a }
+          ,  annot  :: a}
   deriving (Eq, Show, Data, Typeable)
 
 data Enumeration a = Enumeration
-  { name   :: Ident
-  , fields :: [(Ident, Maybe (Expr a))]
+  { name   :: Ident a
+  , fields :: [(Ident a, Maybe (Expr a))]
   , annot  :: a
   } deriving (Eq, Show, Data, Typeable)
 
@@ -251,8 +251,8 @@ data UnOp a
   deriving (Eq, Show, Data, Typeable)
 
 data Name a
-  = Ident { ident :: Ident
-         ,  annot :: a}
+  = IdentName { ident :: Ident a
+             ,  annot :: a}
   | HierAccess { idents :: [Name a]
               ,  annot  :: a}
   | ArrayAccess { name  :: Name a
@@ -291,4 +291,7 @@ data Literal a
   | LitFalse { annot :: a }
   deriving (Eq, Show, Data, Typeable)
 
-type Ident = String
+data Ident a = Ident
+  { val   :: String
+  , annot :: a
+  } deriving (Eq, Show, Data, Typeable)

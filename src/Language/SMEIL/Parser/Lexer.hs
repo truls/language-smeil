@@ -54,12 +54,12 @@ reserved w = do
   when (r `notElem` reservedWords) $ fail (r ++ " is not a reserved word")
   return r
 
-ident :: Parser String
-ident = lexeme $ do
-  i <- part <|> string "_" <* notFollowedBy part
-  when (i `elem` reservedWords) $
-    fail $ "Keyword " ++ i ++ " used as identifier"
-  return i
+ident :: Parser (S.Ident SrcSpan)
+ident = lexeme $ withPos $ do
+    i <- part <|> string "_" <* notFollowedBy part
+    when (i `elem` reservedWords) $
+      fail $ "Keyword " ++ i ++ " used as identifier"
+    return (S.Ident i)
   where
     part = (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
 
