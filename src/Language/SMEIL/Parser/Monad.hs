@@ -5,6 +5,7 @@
 module Language.SMEIL.Parser.Monad
   ( Parser
   , SrcSpan(..)
+  , toLineFile
   , withPos
   , putPos
   , makePos
@@ -22,6 +23,9 @@ data SrcSpan = SrcSpan
   { start :: SourcePos
   , end   :: SourcePos
   } deriving (Eq, Show, Data, Typeable)
+
+toLineFile :: SrcSpan -> (Int, String)
+toLineFile SrcSpan {start = s} = (unPos $ sourceLine s, sourceName s)
 
 withPos :: Parser (SrcSpan -> a) -> Parser a
 withPos p = do

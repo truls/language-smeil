@@ -2,6 +2,7 @@ module Language.SMEIL.Parser
   ( parse
   , parserTest
   , SrcSpan
+  , toLineFile
   ) where
 
 
