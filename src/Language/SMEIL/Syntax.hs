@@ -35,18 +35,23 @@ module Language.SMEIL.Syntax
   , Ident(..)
   ) where
 
-import           Data.Data (Data, Typeable)
+import           Data.Data      (Data, Typeable)
+import           Data.Semigroup
 
 data DesignFile a = DesignFile
   { units :: [DesignUnit a]
   , annot :: a
   } deriving (Eq, Show, Data, Typeable)
 
+instance Semigroup (DesignFile a) where
+  (DesignFile un a) <> (DesignFile un' _) = DesignFile (un ++ un') a
+
 data DesignUnit a = DesignUnit
   { imports     :: [Import a] -- ^ Imports of the design unit
   , unitElement :: [UnitElement a] -- ^ A unit-level process or network
   , annot       :: a
   } deriving (Eq, Show, Data, Typeable)
+
 
 data UnitElement a
   = UnitProc { process :: Process a }
@@ -68,7 +73,7 @@ data Import a
 data Instance a = Instance
   { instName  :: Maybe (Ident a) -- ^ The name of the instance
   , instIndex :: Maybe (Expr a)
-  , elName    :: Ident a -- ^ The name of the object to initialize
+  , elName    :: Name a -- ^ The name of the object to initialize
   , params    :: [(Maybe (Ident a), Expr a)] -- ^ Optionally named parameters of the object
   , annot     :: a
   } deriving (Eq, Show, Data, Typeable)

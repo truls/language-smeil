@@ -79,7 +79,7 @@ instanceDecl =
     (reserved "instance" >>
      S.Instance <$> (transformIdent <$> ident) <*>
      (optional (brackets expression) <* reserved "of") <*>
-     ident <*>
+     name <*>
      parens (paramMap `sepBy` comma) <*
      semi)
   where
