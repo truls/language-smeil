@@ -150,6 +150,8 @@ data Declaration a
   | BusDecl (Bus a)
   | FuncDecl (Function a)
   | EnumDecl (Enumeration a)
+  | InstDecl (Instance a)
+  | GenDecl (Generate a)
   deriving (Eq, Show, Data, Typeable)
 
 data Variable a = Variable

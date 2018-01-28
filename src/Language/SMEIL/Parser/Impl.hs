@@ -163,6 +163,8 @@ declaration =
     , S.BusDecl <$> busDecl
     , S.FuncDecl <$> function
     , S.EnumDecl <$> enum
+    , S.InstDecl <$> instanceDecl
+    , S.GenDecl <$> genDecl
     ] <?>
   "declaration"
 
