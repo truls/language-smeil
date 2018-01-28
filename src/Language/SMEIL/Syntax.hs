@@ -52,7 +52,6 @@ data DesignUnit a = DesignUnit
   , annot       :: a
   } deriving (Eq, Show, Data, Typeable)
 
-
 data UnitElement a
   = UnitProc { process :: Process a }
   | UnitNet { network :: Network a }
