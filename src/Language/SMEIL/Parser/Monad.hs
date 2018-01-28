@@ -5,6 +5,7 @@
 module Language.SMEIL.Parser.Monad
   ( Parser
   , SrcSpan(..)
+  , mkSrcSpan
   , toLineFile
   , withPos
   , putPos
@@ -14,6 +15,7 @@ module Language.SMEIL.Parser.Monad
 
 import           Control.Monad.State.Lazy
 import           Data.Data
+import           Data.Semigroup
 import           Data.Void
 import           Text.Megaparsec
 
@@ -22,7 +24,18 @@ type Parser = StateT SourcePos (Parsec Void String)
 data SrcSpan = SrcSpan
   { start :: SourcePos
   , end   :: SourcePos
-  } deriving (Eq, Show, Data, Typeable)
+  } deriving (Show, Data, Typeable)
+
+instance Eq SrcSpan where
+  _ == _ = True
+
+mkSrcSpan :: SrcSpan
+mkSrcSpan = SrcSpan sourcePos0 sourcePos0
+  where
+    sourcePos0 = SourcePos "" (mkPos 0) (mkPos 0)
+
+instance Semigroup SrcSpan where
+  (SrcSpan sa ea) <> (SrcSpan se ee) = SrcSpan (min sa se) (max ea ee)
 
 toLineFile :: SrcSpan -> (Int, String)
 toLineFile SrcSpan {start = s} = (unPos $ sourceLine s, sourceName s)

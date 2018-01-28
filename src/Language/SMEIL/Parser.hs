@@ -3,6 +3,7 @@ module Language.SMEIL.Parser
   , parserTest
   , SrcSpan
   , toLineFile
+  , mkSrcSpan
   ) where
 
 
